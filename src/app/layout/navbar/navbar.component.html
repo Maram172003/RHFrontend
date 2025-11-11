@@ -1,0 +1,20 @@
+    <header class="header">
+      <div class="greeting">
+        <h1>Hello dana 👋🏻</h1>
+        <p>{{ greeting$ | async }}</p>
+      </div>
+
+      <div class="header-right">
+        <span class="datetime">
+          {{ now$ | async | date:"EEE, dd MMM y | HH:mm 'hrs'" }}
+        </span>
+        <div class="header-icons">
+          <img src="assets/images/img_ic_round_notifications.svg" alt="Notifications">
+          <img src="assets/images/img_vector.svg" alt="Messages">
+        </div>
+        <div class="employee-dropdown">
+          <span>Employee</span>
+          <img src="assets/images/img_arrow_down.svg" alt="Dropdown">
+        </div>
+      </div>
+    </header>

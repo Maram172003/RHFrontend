@@ -1,0 +1,28 @@
+.card {
+  max-width: 420px;
+  margin: 40px auto;
+  padding: 24px;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  background: #fff;
+}
+h2 { margin-top: 0; }
+
+.field { display: flex; flex-direction: column; margin-bottom: 16px; }
+.field input { padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+
+small { color: #c00; }
+.error { color: #c00; margin: 8px 0; }
+.success { color: #0a7a2f; margin: 8px 0; }
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #1fc5b2;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:disabled { opacity: .6; cursor: not-allowed; }

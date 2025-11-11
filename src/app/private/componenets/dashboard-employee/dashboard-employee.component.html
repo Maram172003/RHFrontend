@@ -1,0 +1,168 @@
+<div class="main-container">
+
+  <!-- Sidebar -->
+
+  <app-sidebar></app-sidebar>
+
+  <!-- Contenu -->
+  <section class="content-area">
+    <app-navbar></app-navbar>
+    <div class="top-row">
+      <!-- Completed Tasks -->
+      <div class="card-kpi">
+        <div class="kpi-head">
+          <span class="pill">
+            <img src="assets/images/medaille.svg" alt="Badge" />
+          </span>
+          <span class="kpi-title">Completed Tasks</span>
+        </div>
+
+        <div class="kpi-value">07</div>
+
+
+        <div class="kpi__updatebar">
+          Update: {{ lastUpdated | date:'MMMM d, y' }}
+        </div>
+      </div>
+
+      <!-- Last Leave Demand -->
+      <div class="card last-leave">
+        <div class="card-kpi">
+          <div class="kpi-head">
+            <span class="pill">
+              <img src="assets/images/tasks.svg" alt="Last Leave" />
+            </span>
+            <span class="kpi-title">Last Leave Demand</span>
+          </div>
+
+          <!-- Statut statique pour l’instant -->
+          <div class="kpi-value">Not Approved</div>
+
+          <!-- Date statique d’exemple -->
+          <div class="kpi__updatebar">
+            Update: {{ lastUpdated | date:'MMMM d, y' }}
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+    <div class="dashboard-mid">
+      <div class="work-hours-container">
+
+        <h2 class="title">Work hours</h2>
+
+        <div class="chart-wrapper">
+          <!-- Y-axis labels -->
+          <div class="y-axis">
+            <div class="y-label">8h</div>
+            <div class="y-label">4h</div>
+          </div>
+
+          <!-- Chart bars -->
+          <div class="chart-area">
+            <div class="bar-container" *ngFor="let day of days">
+              <div class="bar-wrapper">
+                <div class="bar empty-bar"></div>
+              </div>
+              <div class="day-label">{{ day.label }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card tasks-card">
+        <h3 class="tasks-title">Tasks</h3>
+
+        <table class="tasks-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Team</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <img class="avatar" src="assets/images/p1.svg" alt="Leasie Watson">
+                  <span>Leasie Watson</span>
+                </div>
+              </td>
+              <td>
+                <div class="team-pill">
+                  <img class="avatar sm" src="assets/images/p1.svg" alt="">
+                  <img class="avatar sm" src="assets/images/p2.svg" alt="">
+                  <img class="avatar sm" src="assets/images/p3.svg" alt="">
+                </div>
+              </td>
+              <td><span class="status-badge done">Done</span></td>
+            </tr>
+
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <img class="avatar" src="assets/images/p3.svg" alt="Darlene Robertson">
+                  <span>Darlene Robertson</span>
+                </div>
+              </td>
+              <td>
+                <div class="team-pill">
+                  <img class="avatar sm" src="assets/images/p1.svg" alt="">
+                  <img class="avatar sm" src="assets/images/p2.svg" alt="">
+                  <img class="avatar sm" src="assets/images/p3.svg" alt="">
+                </div>
+              </td>
+              <td><span class="status-badge progress">In progress</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+    </div>
+    <!-- Carte Absences -->
+    <div class="card absences-card">
+      
+        <h3 class="absences-title">Absences</h3>
+
+        <table class="absences-table">
+          <thead>
+            <tr>
+              <th>Absence Type</th>
+              <th>Period</th>
+              <th>Duration</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>paid leave</td>
+              <td>08 sept 2025–21 sept 2025</td>
+              <td>14 days</td>
+              <td><span class="a-badge ok">Approved</span></td>
+            </tr>
+            <tr>
+              <td>paid leave</td>
+              <td>08 jan 2025–21 oct 2025</td>
+              <td>02 days</td>
+              <td><span class="a-badge ok">Approved</span></td>
+            </tr>
+
+          </tbody>
+        </table>
+
+      
+
+    </div>
+
+
+
+
+
+  </section>
+
+
+</div>

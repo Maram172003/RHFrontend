@@ -1,0 +1,99 @@
+<div class="main-container">
+
+  <!-- Sidebar -->
+  <app-sidebar-administration></app-sidebar-administration>
+
+  <!-- Contenu -->
+  <section class="content-area">
+    <app-navbar></app-navbar>
+
+    <!-- Tabs -->
+    <div class="tabs-row">
+      <div class="tabs">
+        <button class="tab" [class.is-active]="activeTab==='team-demand'" (click)="selectTab('team-demand')">Team
+          Demands</button>
+
+
+      </div>
+
+    </div>
+    <div class="card ">
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Employee Name</th>
+              <th>Status</th>
+              <th>Action</th>
+
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Darlene Miles</td>
+
+              <td><span class="badge ok">Approved</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
+                  <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
+                  <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Cody Fisher</td>
+              <td><span class="badge ok">Approved</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
+                  <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
+                  <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Floyd Miles</td>
+              <td><span class="badge ok">Approved</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
+                  <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
+                  <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Jacob Simmons</td>
+              <td><span class="badge bad">refused</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
+                  <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
+                  <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
+                </div>
+            </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination (pied du cadre) -->
+      <div class="pagination">
+
+
+        <span class="range">Showing 1 to 10 out of 12 records</span>
+
+        <div class="pages">
+          <button class="chev">&lsaquo;</button>
+          <button class="page is-active">1</button>
+          <button class="page">2</button>
+          <button class="page">3</button>
+          <button class="page">4</button>
+          <button class="chev">&rsaquo;</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

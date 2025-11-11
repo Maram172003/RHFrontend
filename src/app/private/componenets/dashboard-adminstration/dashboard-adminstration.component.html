@@ -1,0 +1,234 @@
+<div class="main-container">
+
+  <!-- Sidebar -->
+
+  <app-sidebar-administration> </app-sidebar-administration>
+
+  <!-- Contenu -->
+  <section class="content-area">
+    <app-navbar></app-navbar>
+    <div class="admin-page">
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="card kpi-card">
+          <div class="kpi-head">
+            <span class="pill">
+              <img src="assets/images/totalemployee.svg" alt="Badge" />
+            </span>
+            <span class="kpi-title">Total Employee</span>
+          </div>
+          <div class="kpi-value">560</div>
+
+          <div class="kpi__updatebar">
+            Update: {{ lastUpdated | date:'MMMM d, y' }}
+          </div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-head">
+            <span class="pill">
+              <img src="assets/images/todayattendance.svg" alt="Badge" />
+            </span>
+            <span class="kpi-title">Today Attendance</span>
+          </div>
+          <div class="kpi-value">560</div>
+
+          <div class="kpi__updatebar">
+            Update: {{ lastUpdated | date:'MMMM d, y' }}
+          </div>
+        </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-head">
+            <span class="pill">
+              <img src="assets/images/pendingtime.svg" alt="Badge" />
+            </span>
+            <span class="kpi-title">Pending Time Off</span>
+          </div>
+          <div class="kpi-value">560</div>
+
+          <div class="kpi__updatebar">
+            Update: {{ lastUpdated | date:'MMMM d, y' }}
+          </div>
+        </div>
+
+        <div class="card kpi-card">
+          <div class="kpi-head">
+            <span class="pill">
+              <img src="assets/images/totaldepartment.svg" alt="Badge" />
+            </span>
+            <span class="kpi-title">Total Departments</span>
+          </div>
+          <div class="kpi-value">560</div>
+
+          <div class="kpi__updatebar">
+            Update: {{ lastUpdated | date:'MMMM d, y' }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Middle row -->
+      <div class="mid-row">
+        <!-- Leave overview -->
+        <section class="card leave-card">
+          <div class="card-head">
+            <h3>Leave Overview</h3>
+            <div class="date-menu-wrap" (click)="$event.stopPropagation()">
+              <button class="ghost-btn" (click)="toggleDateMenu()">
+                {{ lastUpdated | date:'MMMM d, y' }} ▾
+              </button>
+
+              <!-- menu des 2 jours précédents -->
+              <ul class="date-menu" *ngIf="dateMenuOpen">
+                <li (click)="setLastUpdated(yesterday)">
+                  {{ yesterday | date:'MMMM d, y' }}
+                </li>
+                <li (click)="setLastUpdated(twoDaysAgo)">
+                  {{ twoDaysAgo | date:'MMMM d, y' }}
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="leave-grid">
+            <div class="leave-meta">
+              <div class="bar-meta">Total absence <b>15</b></div>
+            </div>
+            <div class="leave-bars">
+
+
+              <div class="bar-row">
+                <div class="bar-track"><span class="bar-fill" style="width: 78%"></span></div>
+                <span class="bar-label">Paid Vacation</span>
+              </div>
+
+              <div class="bar-row">
+                <div class="bar-track"><span class="bar-fill" style="width: 52%"></span></div>
+                <span class="bar-label">Sick</span>
+              </div>
+
+              <div class="bar-row">
+                <div class="bar-track"><span class="bar-fill" style="width: 65%"></span></div>
+                <span class="bar-label">Unjustified</span>
+              </div>
+
+              <div class="bar-row">
+                <div class="bar-track"><span class="bar-fill" style="width: 40%"></span></div>
+                <span class="bar-label">Maternity</span>
+              </div>
+
+              <div class="bar-row">
+                <div class="bar-track"><span class="bar-fill" style="width: 30%"></span></div>
+                <span class="bar-label">Administrative</span>
+              </div>
+            </div>
+
+          </div>
+
+
+        </section>
+
+        <!-- To Do list -->
+        <section class="card todo-card">
+          <div class="card-head">
+            <h3>To Do List</h3>
+            <div class="date-menu-wrap" (click)="$event.stopPropagation()">
+              <button class="ghost-btn" (click)="toggleDateMenu()">
+                {{ lastUpdated | date:'MMMM d, y' }} ▾
+              </button>
+
+              <!-- menu des 2 jours précédents -->
+              <ul class="date-menu" *ngIf="dateMenuOpen">
+                <li (click)="setLastUpdated(yesterday)">
+                  {{ yesterday | date:'MMMM d, y' }}
+                </li>
+                <li (click)="setLastUpdated(twoDaysAgo)">
+                  {{ twoDaysAgo | date:'MMMM d, y' }}
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <ul class="todo-list">
+            <li class="todo-item">
+              <div class="todo-main">
+                <div class="todo-title">Outing schedule for every departement</div>
+                <div class="todo-meta">5 minutes ago</div>
+              </div>
+              <div class="todo-actions">
+                <button class="dot-btn">⋯</button>
+              </div>
+            </li>
+
+            <li class="todo-item">
+              <div class="todo-main">
+                <div class="todo-title">Meeting IT Department</div>
+                <div class="todo-meta">Yesterday, 12:30 PM</div>
+              </div>
+              <div class="todo-actions"><button class="dot-btn">⋯</button></div>
+            </li>
+
+            <li class="see-all"><a href="#">See All</a></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Attendance Overview -->
+      <section class="card table-card">
+        <h3 class="attendance-title">Attendance Overview</h3>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Employee Name</th>
+                <th>Designation</th>
+                <th>Type</th>
+                <th>Check In Time</th>
+                <th>Status</th>
+                <th>Check Out Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="user">
+                    <span class="avatar" style="--img:url('assets/images/p2.svg')"></span>
+                    <span>Leasie Watson</span>
+                  </div>
+                </td>
+                <td>Team Lead - Design</td>
+                <td>Office</td>
+                <td>09:27 AM</td>
+                <td><span class="badge ok">On Time</span></td>
+                <td>05:27 AM</td>
+                <td><span class="badge ok">On Time</span></td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="user">
+                    <span class="avatar" style="--img:url('assets/images/p1.svg')"></span>
+                    <span>Darlene Robertson</span>
+                  </div>
+                </td>
+                <td>Web Designer</td>
+                <td>Office</td>
+                <td>10:15 AM</td>
+                <td><span class="badge late">Late</span></td>
+                <td>04:15 AM</td>
+                <td><span class="badge warn">early</span></td>
+              </tr>
+
+
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+  </section>
+
+
+</div>

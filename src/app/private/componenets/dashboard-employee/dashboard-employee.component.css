@@ -1,0 +1,318 @@
+:root{
+  --teal:#1fc5b2;
+  --teal-20:#d5eef5;
+  --ink:#16141b;
+  --muted:#a1a0a7;
+  --stroke:rgba(22,20,27,.08);
+  --stroke-2:rgba(22,20,27,.12);
+  --shadow:0 8px 24px rgba(0,0,0,.06);
+  --radius-xl:36px;
+  --radius-lg:14px;
+}
+html,body{
+  height:100%;
+  margin:0;
+  overflow:hidden;
+}
+*{box-sizing:border-box}
+body{
+  font-family:'Lexend',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color:var(--ink);
+  background:#fff;
+}
+
+/* Layout global */
+.main-container{
+  position: fixed;
+  display:flex;
+  height:100vh;
+  width:100%;
+  overflow:hidden;
+  padding:24px 32px;
+  gap:24px;
+}
+.content-area{
+  flex:1;
+  display:grid;
+  grid-template-rows:auto auto auto;
+  min-width:0;
+  
+  
+  
+}
+.top-row{
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  grid-template-columns: 1fr 420px; 
+  gap:18px;
+  margin-bottom:15px;
+  height: 150px;
+  
+}
+.card-kpi{
+  border:1px solid #efedf2;
+  border-radius:14px;
+  background:#fff;
+  padding:18px;
+  width: 540px;
+  
+
+}
+.kpi-head{
+  display:flex; align-items:center; gap:12px;
+  margin-bottom: 10px;
+}
+.pill{
+  height: 32px; width: 50px;
+  border-radius: 999px;
+  background: #D5EEF5;
+  display:flex; align-items:center; justify-content:center;
+}
+.pill img{ width:18px; height:18px; opacity:.9; }
+.kpi-title{ font: 600 14px/1 Lexend, system-ui, sans-serif; color:#2b2b2f; }
+
+/* Valeur principale */
+.kpi-value{
+  font: 800 34px/1 Lexend, system-ui, sans-serif;
+  margin: 6px 0 14px;
+  color: #16141b;
+}
+
+/* Barre d’update grisée */
+.kpi__updatebar{
+  border: 1px solid rgba(22,20,27,.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: 500 12px/1 Lexend, system-ui, sans-serif;
+  color: var(--muted);
+  background: #fff;
+}
+
+
+.dashboard-mid{
+  /* optionnel : si tu poses Work hours + tes 2 tableaux dans la même rangée */
+  display: grid;
+  grid-template-columns: minmax(300px, 540px) 1fr;  /* Work hours à gauche, le reste à droite */
+  gap: 18px;
+  align-items: start;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  
+}
+
+/* La carte elle-même */
+.work-hours-container{
+  width: 100%;
+  max-width: 540px;        /* ≈ la moitié de la zone de contenu */
+  min-width: 100px;
+  height: 210px;
+  background: #fff;
+  border: 1px solid #efedf2;
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+
+/* Titre */
+.work-hours-container .title{
+font: 600 16px/1 Lexend, system-ui, sans-serif; color:#2b2b2f;
+margin-top: 0%;
+}
+
+/* Zone du graphique */
+.chart-wrapper{
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Axe Y (8h / 4h) collé à gauche et compact */
+.y-axis{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 140px;
+  padding: 0 12px 24px 0; 
+  margin-bottom: 50px;  /* petit espace à droite + espace pour l’axe X */
+}
+.y-label{
+  font-size: 12px;
+  color: #9ca3af;
+  
+}
+
+/* Barres : on ne “remplit” plus toute la ligne, on espace comme dans la maquette */
+.chart-area{
+  display: flex;
+  align-items: flex-end;
+  
+  gap: 40px;               /* espace régulier entre barres */
+  padding-bottom: 24px;    /* espace sous les barres pour les labels jours */
+}
+
+/* Chaque barre + label jour */
+.bar-container{
+  display: flex;
+  flex-direction: column;
+  align-items:center;
+  
+}
+
+/* Largeur/hauteur & style des barres */
+.bar-wrapper{
+  display: flex;
+  justify-content: center;
+  
+}
+.bar{
+  width: 40px;             /* un peu plus large, look “pill” */
+  height: 120px;
+  border-radius: 48px;
+}
+.empty-bar{
+  background: #eef1f4;     /* gris clair */
+  opacity: .9;    
+        /* bien visible mais soft */
+}
+
+/* Jours (x-axis) */
+.day-label{
+  margin-top: 7px;
+  padding: 10px ;
+  font-size: 12px;
+  color: #8a8f98;
+}
+
+
+.tasks-card{   width: 100%;
+  max-width: 540px;        
+  min-width: 100px;
+  height: 210px;
+  background: #fff;
+  border: 1px solid #efedf2;
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  justify-self:end;
+  
+  
+}
+
+/* Titre */
+.tasks-title{
+font: 600 14px/1 Lexend, system-ui, sans-serif; color:#2b2b2f;
+margin-top: 0%;
+}
+
+/* Table */
+.tasks-table{ width:100%; border-collapse:collapse; }
+.tasks-table th,
+.tasks-table td{ padding:5px 5px; }
+
+.tasks-table thead th{
+  text-align:left;
+  color:#5aa0c9;                  /* bleu doux pour l’en-tête */
+  border-bottom:2px solid #b8d3ea;
+  font-weight:300;
+}
+
+.tasks-table tbody tr td{
+  border-top:1px solid #b8d3ea;   /* lignes bleues entre les rangées */
+}
+
+/* Cellule utilisateur (avatar + nom) */
+.user-cell{ display:flex; align-items:center; gap:12px; }
+
+.avatar{
+  width:36px; height:36px; border-radius:50%;
+  object-fit:cover;
+}
+
+/* Pilule équipe avec avatars superposés */
+.team-pill{
+  display:inline-flex; align-items:center;
+             /* var(--teal-20) si tu préfères */
+  border-radius:999px;
+  padding:4px 10px;
+}
+.avatar.sm{
+  width:24px; height:24px; border-radius:50%;
+  object-fit:cover; border:2px solid #fff;
+  margin-left:-8px;
+}
+.avatar.sm:first-child{ margin-left:0; }
+
+/* Badges de statut */
+.status-badge{
+  display:inline-block;
+  padding:6px 12px; border-radius:8px; font-size:13px;
+}
+.status-badge.done{
+  background:rgba(63,194,138,.14); color:#3fc28a;
+}
+.status-badge.progress{
+  background:#fde4e7; color:#e26773;
+}
+
+/* Carte */
+.absences-card{
+  background:#fff;
+  border:1px solid #efedf2;        /* même style que tes autres cards */
+  border-radius:12px;
+  padding:16px 18px;
+  height: 180px;
+  
+  
+  
+}
+.absences-title{
+  margin:0 0 10px;
+  font:600 14px/1 Lexend, system-ui, sans-serif;
+  color:#2b2b2f;
+}
+
+/* Tableau */
+.absences-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  font:400 14px/1.2 Lexend, system-ui, sans-serif;
+  
+}
+.absences-table thead th{
+  text-align:left;
+  padding:5px 15px;
+  background: var(--teal-20, #D5EEF5); /* bleu clair d'en-tête */
+  color:#50A8F0;                        /* léger bleu/gris pour le texte */
+  font-weight:300;
+}
+.absences-table tbody td{
+  padding:14px 16px;
+  border-top:1px solid var(--stroke, rgba(22,20,27,.08));
+  color:#2b2b2f;
+}
+.absences-table tbody tr:hover{
+  background:#fafcfd;                   /* petit hover discret */
+}
+
+/* Badges statut */
+.a-badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+}
+.a-badge.ok{
+  background:rgba(63,194,138,.12);
+  color:#3fc28a;
+}
+.a-badge.bad{
+  background:#fde4e7;
+  color:#e26773;
+}
+
+
+
+
+
+
