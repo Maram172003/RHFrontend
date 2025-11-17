@@ -46,7 +46,16 @@ export class EmployeeComponent implements OnInit {
   departments: string[] = [];
   designations: string[] = [];
 
+
   ngOnInit(): void {
+    this.proForm = this.fb.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      id: [{ value: '', disabled: true }],
+      department: ['', Validators.required],
+      designation: ['', Validators.required],
+    });
+    this.loadEmployees();
     this.activeTabs = 'preview';
     this.proForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -160,6 +169,14 @@ export class EmployeeComponent implements OnInit {
 
   createdId: string | null = null;
   plainAccessCode: string | null = null;
+  employees: any[] = [];
+  loadEmployees(): void {
+    this.employeesService.list().subscribe({
+      next: (rows) => this.employees = rows ?? [],
+      error: (err) => console.error('load employees error', err),
+    });
+  }
+
   onSubmitAll() {
     const id = (this.createdId ?? this.proForm.get('id')?.value) as string | null;
     if (!id) return;
@@ -205,8 +222,8 @@ export class EmployeeComponent implements OnInit {
 
     const roles: Role[] =
       this.selectedRole === 'admin' ? [Role.Admin] :
-      this.selectedRole === 'supervisor' ? [Role.Supervisor] :
-      [Role.Employee];
+        this.selectedRole === 'supervisor' ? [Role.Supervisor] :
+          [Role.Employee];
 
 
     this.employeesService.saveDetails(id, detailsPayload).subscribe({
@@ -215,6 +232,8 @@ export class EmployeeComponent implements OnInit {
         this.employeesService.updateRoles(id, roles).subscribe({
           next: () => {
 
+            this.resetAddFlow();
+            this.loadEmployees();
             this.showAddEmployee = false;
             this.activeTab = 'employees';
             this.activeTabs = 'preview';
@@ -237,6 +256,13 @@ export class EmployeeComponent implements OnInit {
 
       },
     });
+  }
+  private resetAddFlow() {
+    this.proForm.reset();
+    this.previewStep = 1;
+    this.activeTabs = 'preview';
+    this.fileName = '';
+    this.showAddEmployee = false;
   }
 
 
@@ -307,12 +333,7 @@ export class EmployeeComponent implements OnInit {
   goNextFromPreview() {
     this.activeTabs = 'contracts';
   }
-  private resetAddFlow(): void {
-    this.previewStep = 1;
-    this.activeTabs = 'preview';
-    this.fileName = '';
-    this.showAddEmployee = false;
-  }
+
   onCancelAdd(): void {
     if (this.previewStep > 1) {
       this.previewStep--;

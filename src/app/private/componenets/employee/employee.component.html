@@ -46,14 +46,7 @@
                         </select>
                     </div>
 
-                    <div class="filter-group">
-                        <label>Type</label>
-                        <select>
-                            <option>All</option>
-                            <option>Office</option>
-                            <option>Remote</option>
-                        </select>
-                    </div>
+
 
                     <button class="cta-add" (click)="openAddEmployee()">
                         <span>Add New Employee</span>
@@ -69,22 +62,23 @@
                                 <th>Employee Id</th>
                                 <th>Department</th>
                                 <th>Designation</th>
-                                <th>Type</th>
+                                
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr *ngFor="let e of employees">
                                 <td>
                                     <div class="user">
                                         <span class="user-img" style="--img:url('assets/images/p1.svg')"></span>
-                                        <span>Darlene Robertson</span>
+                                        <span>{{ (e.firstName || '') + ' ' + (e.lastName || '') || e.email }}</span>
                                     </div>
                                 </td>
-                                <td>345321231</td>
-                                <td>Design</td>
-                                <td>UI/UX Designer</td>
-                                <td>Office</td>
+                                <td>{{ e.id }}</td>
+
+                                <td>{{ e.department || '-' }}</td>
+                                <td>{{ e.designation || '-' }}</td>
+                               
                                 <td>
                                     <div class="actions">
                                         <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
@@ -93,63 +87,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr>
-                                <td>
-                                    <div class="user">
-                                        <span class="user-img" style="--img:url('assets/images/p3.svg')"></span>
-                                        <span>Floyd Miles</span>
-                                    </div>
-                                </td>
-                                <td>987890345</td>
-                                <td>Development</td>
-                                <td>PHP Developer</td>
-                                <td>Office</td>
-                                <td>
-                                    <div class="actions">
-                                        <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
-                                        <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
-                                        <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user">
-                                        <span class="user-img" style="--img:url('assets/images/p2.svg')"></span>
-                                        <span>Cody Fisher</span>
-                                    </div>
-                                </td>
-                                <td>453567122</td>
-                                <td>Sales</td>
-                                <td>Sales Manager</td>
-                                <td>Office</td>
-                                <td>
-                                    <div class="actions">
-                                        <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
-                                        <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
-                                        <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user">
-                                        <span class="user-img" style="--img:url('assets/images/p1.svg')"></span>
-                                        <span>Dianne Russell</span>
-                                    </div>
-                                </td>
-                                <td>345321231</td>
-                                <td>Sales</td>
-                                <td>BDM</td>
-                                <td>Remote</td>
-                                <td>
-                                    <div class="actions">
-                                        <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
-                                        <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
-                                        <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
-                                    </div>
-                                </td>
-                            </tr>
+
                         </tbody>
                     </table>
                 </div>

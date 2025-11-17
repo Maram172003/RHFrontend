@@ -65,45 +65,31 @@
 
         </div>
 
-        <!-- Corps du tableau -->
-        <div class="table-scroll">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Leave Type</th>
-                <th>Period</th>
-                <th>Duration</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>paid leave</td>
-                <td>08 sept 2025–21 sept 2025</td>
-                <td>14 days</td>
-                <td><span class="badge ok">Approved</span></td>
-              </tr>
-              <tr>
-                <td>paid leave</td>
-                <td>08 jan 2025–21 oct 2025</td>
-                <td>02 days</td>
-                <td><span class="badge ok">Approved</span></td>
-              </tr>
-              <tr>
-                <td>Remote</td>
-                <td>01 jan 2025–02 oct 2025</td>
-                <td>15 days</td>
-                <td><span class="badge ok">Approved</span></td>
-              </tr>
-              <tr>
-                <td>paid leave</td>
-                <td>10 feb 2025–21 feb 2025</td>
-                <td>04 days</td>
-                <td><span class="badge bad">refused</span></td>
-              </tr>
-            </tbody>
-          </table>
+        <div *ngIf="isListLoading">
+          <div class="table-scroll">
+            <table class="table" *ngIf="!isListLoading && myLeaves.length">
+              <thead>
+                <tr>
+                  <th>Leave Type</th>
+                  <th>Period</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr  *ngFor="let l of myLeaves">
+                  <td>{{ l.leaveType }}</td>
+                  <td>{{ l.startDate }} ({{ l.startPart }})</td>
+                  <td>{{ l.endDate }} ({{ l.endPart }})</td>
+                  <td><span class="badge ok">{{ l.status }}</span></td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
         </div>
+
 
         <!-- Pagination (pied du cadre) -->
         <div class="pagination">
@@ -159,94 +145,101 @@
 
   <div class="overlay-card" (click)="$event.stopPropagation()">
     <h3>Leave Demand</h3>
-    <label>Leave Type</label>
-    <div class="field">
+    <form [formGroup]="leaveForm" (ngSubmit)="submit()">
+      <label>Leave Type</label>
+      <div class="field">
 
-      <select>
-        <option>Sickness</option>
-        <option>Paid Leave</option>
-        <option>Remote</option>
-        <option>Marriage</option>
-      </select>
+        <select formControlName="leaveType" required>
+          <option>Sickness</option>
+          <option>Paid Leave</option>
+          <option>Remote</option>
+          <option>Marriage</option>
+        </select>
 
-    </div>
-    <label>Start Date</label>
-    <div class="field">
+      </div>
+      <label>Start Date</label>
+      <div class="field">
 
-      <input type="date" />
+        <input type="date" formControlName="startDate" required />
 
-    </div>
+      </div>
 
 
 
-    <!-- Boutons d’option (non sélectionnés par défaut) -->
-    <div class="btn-group">
-      <button class="btn-option" [class.selected]="selectedStart==='full'" (click)="selectedStart='full'">Full
-        Day</button>
+      <!-- Boutons d’option (non sélectionnés par défaut) -->
+      <div class="btn-group">
+        <button class="btn-option" [class.selected]="selectedStart==='full'" (click)="setStart('full')">Full
+          Day</button>
 
-      <button class="btn-option" [class.selected]="selectedStart==='morning'"
-        (click)="selectedStart='morning'">Morning</button>
+        <button class="btn-option" [class.selected]="selectedStart==='morning'"
+          (click)="setStart('morning')">Morning</button>
 
-      <button class="btn-option" [class.selected]="selectedStart==='afternoon'"
-        (click)="selectedStart='afternoon'">Afternoon</button>
-    </div>
-    <label>End Date</label>
-    <div class="field">
+        <button class="btn-option" [class.selected]="selectedStart==='afternoon'"
+          (click)="setStart('afternoon')">Afternoon</button>
+      </div>
+      <label>End Date</label>
+      <div class="field">
 
-      <input type="date" />
-    </div>
+        <input type="date" formControlName="endDate" required />
+      </div>
 
-    <div class="btn-group">
-      <button class="btn-option" [class.selected]="selectedEnd==='full'" (click)="selectedEnd='full'">Full Day</button>
+      <div class="btn-group">
+        <button class="btn-option" [class.selected]="selectedEnd==='full'" (click)="setEnd('full')">Full
+          Day</button>
 
-      <button class="btn-option" [class.selected]="selectedEnd==='morning'"
-        (click)="selectedEnd='morning'">Morning</button>
-    </div>
-    <label>Attachment</label>
+        <button class="btn-option" [class.selected]="selectedEnd==='morning'"
+          (click)="setEnd('morning')">Morning</button>
+      </div>
+      <label>Attachment</label>
 
-    <div class="upload-box" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+      <div class="upload-box" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
 
-      <input #fileInput type="file" (change)="onFileSelected($event)" hidden>
+        <input #fileInput type="file" (change)="onFileSelected($event)" hidden>
 
-      <!-- Affichage par défaut (aucun fichier) -->
-      <ng-container *ngIf="!fileName; else fileChosen">
-        <div class="upload-content">
-          <div class="upload-icon-wrap" (click)="fileInput.click()">
-            <svg viewBox="0 0 24 24" class="upload-icon" aria-hidden="true">
-              <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17a4 4 0 004 4h8a4 4 0 004-4" fill="none" stroke="currentColor"
-                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+
+        <ng-container *ngIf="!fileName; else fileChosen">
+          <div class="upload-content">
+            <div class="upload-icon-wrap" (click)="fileInput.click()">
+              <svg viewBox="0 0 24 24" class="upload-icon" aria-hidden="true">
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17a4 4 0 004 4h8a4 4 0 004-4" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="upload-title">Drag &amp; Drop or Choose files to upload</div>
+            <div class="upload-subtitle">
+              Supported formats: JPEG, PNG, GIF, MP4, PDF, PSD, AI, Word, PPT
+            </div>
+          </div>
+        </ng-container>
+
+
+        <ng-template #fileChosen>
+          <div class="upload-chosen" title="{{ fileName }}">
+            <svg class="file-badge" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor"
+                opacity=".12" />
+              <path d="M14 2v6h6" stroke="currentColor" fill="none" />
             </svg>
+            <span class="upload-filename">{{ fileName }}</span>
+
+
+            <button type="button" class="clear-file" (click)="clearFile($event)">×</button>
           </div>
-
-          <div class="upload-title">Drag &amp; Drop or Choose files to upload</div>
-          <div class="upload-subtitle">
-            Supported formats: JPEG, PNG, GIF, MP4, PDF, PSD, AI, Word, PPT
-          </div>
-        </div>
-      </ng-container>
-
-      <!-- Affichage quand un fichier est choisi : uniquement le nom -->
-      <ng-template #fileChosen>
-        <div class="upload-chosen" title="{{ fileName }}">
-          <svg class="file-badge" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor" opacity=".12" />
-            <path d="M14 2v6h6" stroke="currentColor" fill="none" />
-          </svg>
-          <span class="upload-filename">{{ fileName }}</span>
-
-          <!-- (optionnel) bouton pour effacer le fichier -->
-          <button type="button" class="clear-file" (click)="clearFile($event)">×</button>
-        </div>
-      </ng-template>
-    </div>
+        </ng-template>
+      </div>
 
 
 
 
 
-    <div class="new-demand-footer">
-      <button class="btn ghost" (click)="closeOverlay()">Cancel</button>
-      <button class="btn primary" (click)="closeOverlay()">Apply</button>
-    </div>
+      <div class="new-demand-footer">
+        <button class="btn ghost" (click)="closeOverlay()">Cancel</button>
+        <button class="btn primary" (click)="closeOverlay()" [disabled]="leaveForm.invalid || submitting">{{ submitting
+          ? 'Saving…' : 'Apply' }}</button>
+      </div>
+
+    </form>
+
   </div>
 </div>

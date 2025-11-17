@@ -22,11 +22,14 @@ export class EmployeesService {
     return this.http.post<{ ok: boolean; employee: any }>(`${this.base}/employees/${id}/details`, body);
   }
 
-  updateRoles(id: string, roles: Role[])  {
+  updateRoles(id: string, roles: Role[]) {
     return this.http.patch<{ ok: boolean; employee: any }>(
-      `${this.base}/employees/${id}/roles`,   
-      { roles }                               
+      `${this.base}/employees/${id}/roles`,
+      { roles }
     );
+  }
+  list() {
+    return this.http.get<any[]>(`${this.base}/employees`);
   }
   //  
   /*
