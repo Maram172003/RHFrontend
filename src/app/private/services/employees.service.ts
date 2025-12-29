@@ -31,6 +31,17 @@ export class EmployeesService {
   list() {
     return this.http.get<any[]>(`${this.base}/employees`);
   }
+
+  createDraft(body: { email: string; previousDraftId?: string }) {
+    return this.http.post<{ employee: any; plainAccessCode: string | null }>(
+      `${this.base}/employees/draft`,
+      body
+    );
+  }
+
+  deleteDraft(id: string) {
+    return this.http.delete<{ ok: boolean }>(`${this.base}/employees/${id}/draft`);
+  }
   //  
   /*
   

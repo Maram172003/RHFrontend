@@ -62,15 +62,16 @@
                                 <th>Employee Id</th>
                                 <th>Department</th>
                                 <th>Designation</th>
-                                
+
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let e of employees">
+                            <tr *ngFor="let e of pagedEmployees">
                                 <td>
                                     <div class="user">
-                                        <span class="user-img" style="--img:url('assets/images/p1.svg')"></span>
+                                        <img class="user-img" [src]="getEmployeePhoto(e.id) || 'assets/images/p1.svg'"
+                                            alt="Employee photo">
                                         <span>{{ (e.firstName || '') + ' ' + (e.lastName || '') || e.email }}</span>
                                     </div>
                                 </td>
@@ -78,7 +79,7 @@
 
                                 <td>{{ e.department || '-' }}</td>
                                 <td>{{ e.designation || '-' }}</td>
-                               
+
                                 <td>
                                     <div class="actions">
                                         <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
@@ -94,33 +95,39 @@
 
 
                 <div class="pagination">
-                    <span class="range">Showing 1 to 10 out of 60 records</span>
+                    <span class="range">
+                        Showing {{ startIndex }} to {{ endIndex }} out of {{ totalRecords }} records
+                    </span>
+
                     <div class="pages">
-                        <button class="chev">&lsaquo;</button>
-                        <button class="page is-active">1</button>
-                        <button class="page">2</button>
-                        <button class="page">3</button>
-                        <button class="page">4</button>
-                        <button class="chev">&rsaquo;</button>
+                        <button class="chev" (click)="prevPage()" [disabled]="currentPage === 1">&lsaquo;</button>
+
+                        <button class="page" *ngFor="let p of pages" [class.is-active]="p === currentPage"
+                            (click)="goToPage(p)">
+                            {{ p }}
+                        </button>
+
+                        <button class="chev" (click)="nextPage()"
+                            [disabled]="currentPage === totalPages">&rsaquo;</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- ===== FORMULAIRE ADD EMPLOYEE ===== -->
-        <div *ngIf="activeTab === 'employees' && showAddEmployee">
+        <div *ngIf="activeTab === 'employees' && showAddEmployee" class="add-employee-layout">
 
             <div class="tabs-row">
                 <div class="tabs">
-                    <button class="tab" [class.is-active]="activeTabs === 'preview'" (click)="selectTab('preview')">
+                    <button class="tab" [class.is-active]="activeTabs === 'preview'">
                         Preview
                     </button>
 
-                    <button class="tab" [class.is-active]="activeTabs === 'contracts'" (click)="selectTab('contracts')">
+                    <button class="tab" [class.is-active]="activeTabs === 'contracts'">
                         Contracts
                     </button>
 
-                    <button class="tab" [class.is-active]="activeTabs === 'role'" (click)=" selectTab('role')">
+                    <button class="tab" [class.is-active]="activeTabs === 'role'">
                         Role and Permissions
                     </button>
                 </div>
@@ -145,97 +152,206 @@
                                 <!-- Colonne 1 : Formulaire -->
                                 <form class="grid-form" novalidate>
                                     <!-- Row 1 -->
-                                    <div class="field">
-                                        <input id="firstName" type="text" placeholder="First Name"
-                                            formControlName="firstName" />
+                                    <div class="field-wrap">
+                                        <div class="field">
+
+                                            <input id="firstName" type="text" placeholder="First Name"
+                                                formControlName="firstName" />
+                                            <span class="req-star" *ngIf="showStar('firstName')">*</span>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('firstName')">
+                                            {{ getErrorMessage('firstName') }}
+                                        </small>
+
                                     </div>
-                                    <div class="field">
-                                        <input id="lastName" type="text" placeholder="Last Name"
-                                            formControlName="lastName" />
+                                    <div class="field-wrap">
+                                        <div class="field">
+                                            <input id="lastName" type="text" placeholder="Last Name"
+                                                formControlName="lastName" /><span class="req-star"
+                                                *ngIf="showStar('lastName')">*</span>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('lastName')">
+                                            {{ getErrorMessage('lastName') }}
+                                        </small>
+
+
                                     </div>
 
+
                                     <!-- Row 2 -->
-                                    <div class="field">
-                                        <input id="mobile" type="tel" placeholder="Mobile Number"
-                                            formControlName="mobile" />
+                                    <div class="field-wrap">
+                                        <div class="field">
+                                            <input id="mobile" type="tel" placeholder="Mobile Number"
+                                                formControlName="mobile" /><span class="req-star"
+                                                *ngIf="showStar('mobile')">*</span>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('mobile')">
+                                            {{ getErrorMessage('mobile') }}
+                                        </small>
+
                                     </div>
-                                    <div class="field">
-                                        <input id="email" type="email" placeholder="Email Address"
-                                            formControlName="email" />
+                                    <div class="field-wrap">
+                                        <div class="field">
+                                            <input id="email" type="email" placeholder="Email Address"
+                                                formControlName="email" /><span class="req-star"
+                                                *ngIf="showStar('email')">*</span>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('email')">
+                                            {{ getErrorMessage('email') }}
+                                        </small>
+
                                     </div>
 
                                     <!-- Row 3 : Birth date + Marital -->
-                                    <div class="field date-field">
-                                        <input #dob id="dob" type="date" required formControlName="dob" />
-                                        <span class="date-placeholder">Date of Birth</span>
+                                    <div class="field-wrap">
+                                        <div class="field date-field">
+                                            <input #dob id="dob" type="date" [max]="today" required
+                                                formControlName="dob" [class.invalid]="isInvalidRequired('dob')" /><span
+                                                class="req-star" *ngIf="showStar('dob')">*</span>
 
-                                        <!-- bouton transparent qui ouvre le date picker -->
-                                        <button type="button" class="date-trigger" aria-label="Open calendar"
-                                            (click)="openDate(dob)">
-                                            <!-- icône agenda -->
-                                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                <path
-                                                    d="M7 2v2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 6v9H5V8h14z"
-                                                    fill="currentColor" />
-                                                <rect x="7" y="11" width="4" height="3" rx="1" ry="1"
-                                                    fill="currentColor" opacity=".4" />
-                                            </svg>
-                                        </button>
+                                            <span class="date-placeholder">Date of Birth</span>
+
+
+
+                                            <!-- bouton transparent qui ouvre le date picker -->
+                                            <button type="button" class="date-trigger" aria-label="Open calendar"
+                                                (click)="openDate(dob)">
+                                                <!-- icône agenda -->
+                                                <svg viewBox="3 0 24 24" aria-hidden="true">
+                                                    <path
+                                                        d="M7 2v2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 6v9H5V8h14z"
+                                                        fill="currentColor" />
+                                                    <rect x="7" y="11" width="4" height="3" ry="1" ry="1"
+                                                        fill="currentColor" opacity=".4" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('dob')">
+                                            {{ getErrorMessage('dob') }}
+                                        </small>
+
                                     </div>
+                                    <div class="field-wrap">
+                                        <div class="field select-field">
+                                            <span class="req-star" *ngIf="showStar('maritalStatus')">*</span>
+                                            <select id="marital" aria-label="Marital Status" required
+                                                formControlName="maritalStatus"
+                                                [class.placeholder]="!proForm.get('maritalStatus')?.value">
 
-                                    <div class="field select-field">
-                                        <select id="marital" aria-label="Marital Status" required
-                                            formControlName="maritalStatus">
-                                            <option value="" selected disabled hidden>Marital Status</option>
-                                            <option *ngFor="let m of maritalStatuses" [value]="m">{{ m }}</option>
-                                        </select>
+                                                <option value=""  disabled hidden>Marital Status</option>
+                                                <option *ngFor="let m of maritalStatuses" [value]="m">{{ m }}</option>
+                                            </select>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('maritalStatus')">
+                                            {{ getErrorMessage('maritalStatus') }}
+                                        </small>
+
+
                                     </div>
 
                                     <!-- Row 4 -->
-                                    <div class="field select-field">
-                                        <select id="gender" aria-label="Gender" required formControlName="gender">
+                                    <div class="field-wrap">
+                                        <div class="field-wrap">
+                                            <div class="field select-field">
+                                                <select id="gender" aria-label="Gender" required
+                                                    formControlName="gender"
+                                                    [class.placeholder]="!proForm.get('gender')?.value">
 
-                                            <option value="" selected disabled hidden>Gender</option>
-                                            <option *ngFor="let g of genders" [value]="g">{{ g }}</option>
-                                        </select>
+                                                    <option value=""  disabled hidden>Gender</option>
+                                                    <option *ngFor="let g of genders" [value]="g">{{ g }}</option>
+                                                </select>
+                                            </div>
+
+                                        </div>
+
+
                                     </div>
 
-                                    <div class="field select-field">
-                                        <select id="nationality" aria-label="Nationality" required
-                                            formControlName="nationality">
-                                            <option value="" selected disabled hidden>Nationnality</option>
-                                            <option *ngFor="let n of nationalities" [value]="n">{{ n }}</option>
-                                        </select>
+
+                                    <div class="field-wrap">
+                                        <div class="field select-field">
+                                            <select id="nationality" aria-label="Nationality" required
+                                                formControlName="nationality"
+                                                [class.placeholder]="!proForm.get('nationality')?.value">
+                                                <option value="" disabled hidden>Nationnality</option>
+                                                <option *ngFor="let n of nationalities" [value]="n">{{ n }}</option>
+                                            </select>
+                                        </div>
+
+
                                     </div>
+
 
                                     <!-- Row 5 -->
-                                    <div class="field span-2">
-                                        <input id="address" type="text" placeholder="Address"
-                                            formControlName="address" />
+
+                                    <div class="field-wrap">
+                                        <div class="field span-2">
+                                            <input id="address" type="text" placeholder="Address"
+                                                formControlName="address" /><span class="req-star"
+                                                *ngIf="showStar('address')">*</span>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('address')">
+                                            {{ getErrorMessage('address') }}
+                                        </small>
+
+
                                     </div>
+
 
 
                                     <!-- Row 6 -->
-                                    <div class="field select-field">
-                                        <select id="state" aria-label="State" required formControlName="state">
-                                            <option value="" selected disabled hidden>State</option>
-                                            <option *ngFor="let s of states" [value]="s">{{ s }}</option>
-                                        </select>
+                                    <div class="field-wrap">
+                                        <div class="field select-field">
+                                            <span class="req-star" *ngIf="showStar('state')">*</span>
+                                            <select id="state" aria-label="State" required formControlName="state"
+                                                [class.placeholder]="!proForm.get('state')?.value">
+                                                <option value=""  disabled hidden>State</option>
+                                                <option *ngFor="let s of states" [value]="s">{{ s }}</option>
+                                            </select>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('state')">
+                                            {{ getErrorMessage('state') }}
+                                        </small>
+
                                     </div>
-                                    <div class="field select-field">
-                                        <select id="city" aria-label="City" required formControlName="city"
-                                            [disabled]="!cities.length">
-                                            <option value="" selected disabled hidden>City</option>
-                                            <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
-                                        </select>
-                                    </div>
+                                    <div class="field-wrap">
+                                        <div class="field select-field">
+                                            <span class="req-star" *ngIf="showStar('city')">*</span>
+
+                                            <select id="city" aria-label="City" required formControlName="city"
+                                                [disabled]="!cities.length"
+                                                [class.placeholder]="!proForm.get('city')?.value">
+                                                <option value=""  disabled hidden>City</option>
+                                                <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+                                            </select>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('city')">
+                                            {{ getErrorMessage('city') }}
+                                        </small>
 
 
-
-                                    <div class="field">
-                                        <input id="zip" type="text" inputmode="numeric" placeholder="ZIP Code"
-                                            formControlName="zip" />
                                     </div>
+                                    <div class="field-wrap">
+                                        <div class="field">
+                                            <input id="zip" type="text" inputmode="numeric" placeholder="ZIP Code"
+                                                formControlName="zip"><span class="req-star"
+                                                *ngIf="showStar('zip')">*</span>
+
+                                        </div>
+                                        <small class="error" *ngIf="isInvalid('zip')">
+                                            {{ getErrorMessage('zip') }}
+                                        </small>
+
+                                    </div>
+
 
 
                                 </form>
@@ -268,14 +384,20 @@
                                     <!-- Affichage quand un fichier est choisi : uniquement le nom -->
                                     <ng-template #fileChosen>
                                         <div class="upload-chosen" title="{{ fileName }}">
-                                            <svg class="file-badge" viewBox="0 0 24 24" aria-hidden="true">
+                                            <!-- ✅ Preview si image -->
+                                            <img *ngIf="filePreviewUrl" class="upload-preview" [src]="filePreviewUrl"
+                                                alt="Employee photo" />
+
+                                            <!-- sinon icône fichier -->
+                                            <svg *ngIf="!filePreviewUrl" class="file-badge" viewBox="0 0 24 24"
+                                                aria-hidden="true">
                                                 <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
                                                     fill="currentColor" opacity=".12" />
                                                 <path d="M14 2v6h6" stroke="currentColor" fill="none" />
                                             </svg>
+
                                             <span class="upload-filename">{{ fileName }}</span>
 
-                                            <!-- (optionnel) bouton pour effacer le fichier -->
                                             <button type="button" class="clear-file"
                                                 (click)="clearFile($event)">×</button>
                                         </div>
@@ -302,14 +424,32 @@
                                     </header>
 
                                     <div class="fields">
-                                        <div class="field">
-                                            <input id="account-holder" type="text"
-                                                placeholder="name of the account holder"
-                                                formControlName="bankAccountHolder" />
+                                        <div class="field-wrap">
+                                            <div class="field">
+                                                <input id="account-holder" type="text"
+                                                    placeholder="name of the account holder"
+                                                    formControlName="bankAccountHolder" /><span class="req-star"
+                                                    *ngIf="showStar('bankAccountHolder')">*</span>
+
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('bankAccountHolder')">
+                                                {{ getErrorMessage('bankAccountHolder') }}
+                                            </small>
+
                                         </div>
-                                        <div class="field">
-                                            <input id="rib" type="text" placeholder="RIB" formControlName="rib" />
+                                        <div class="field-wrap">
+                                            <div class="field">
+                                                <input id="rib" type="text" placeholder="RIB"
+                                                    formControlName="rib" /><span class="req-star"
+                                                    *ngIf="showStar('rib')">*</span>
+
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('rib')">
+                                                {{ getErrorMessage('rib') }}
+                                            </small>
+
                                         </div>
+
                                     </div>
                                 </section>
 
@@ -323,37 +463,77 @@
                                     </header>
 
                                     <div class="fields">
-                                        <div class="field">
-                                            <input id="cnss" type="text" placeholder="CNSS number"
-                                                formControlName="cnss" />
-                                        </div>
-                                        <div class="field">
-                                            <input id="emergency-first-name" type="text"
-                                                placeholder="Emergency Contact First Name"
-                                                formControlName="emergencyFirstName" />
-                                        </div>
-                                        <div class="field">
-                                            <input id="emergency-last-name" type="text"
-                                                placeholder="Emergency Contact last Name"
-                                                formControlName="emergencyLastName" />
-                                        </div>
-                                        <div class="field">
-                                            <input id="emergency-last-name-2" type="text"
-                                                placeholder="Emergency Contact number"
-                                                formControlName="emergencyNumber" />
-                                        </div>
-
-                                        <div class="field select-field">
-
-                                            <select id="relationship" aria-label="Relationship with the employee"
-                                                required formControlName="relationship">
-                                                <option value="" selected disabled hidden>Relationship with the employee
-                                                </option>
-                                                <option *ngFor="let r of relationships" [value]="r">{{ r }}</option>
-                                            </select>
+                                        <div class="field-wrap">
+                                            <div class="field">
+                                                <input id="cnss" type="text" placeholder="CNSS number"
+                                                    formControlName="cnss" /><span class="req-star"
+                                                    *ngIf="showStar('cnss')">*</span>
 
 
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('cnss')">
+                                                {{ getErrorMessage('cnss') }}
+                                            </small>
+
                                         </div>
+                                        <div class="field-wrap">
+                                            <div class="field">
+                                                <input id="emergency-first-name" type="text"
+                                                    placeholder="Emergency Contact First Name"
+                                                    formControlName="emergencyFirstName" /><span class="req-star"
+                                                    *ngIf="showStar('emergencyFirstName')">*</span>
+
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('emergencyFirstName')">
+                                                {{ getErrorMessage('emergencyFirstName') }}
+                                            </small>
+                                        </div>
+                                        <div class="field-wrap">
+                                            <div class="field">
+                                                <input id="emergency-last-name" type="text"
+                                                    placeholder="Emergency Contact last Name"
+                                                    formControlName="emergencyLastName" /><span class="req-star"
+                                                    *ngIf="showStar('emergencyLastName')">*</span>
+
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('emergencyLastName')">
+                                                {{ getErrorMessage('emergencyLastName') }}
+                                            </small>
+
+                                        </div>
+                                        <div class="field-wrap">
+                                            <div class="field">
+                                                <input id="emergency-last-name-2" type="text"
+                                                    placeholder="Emergency Contact number"
+                                                    formControlName="emergencyNumber" /><span class="req-star"
+                                                    *ngIf="showStar('emergencyNumber')">*</span>
+
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('emergencyNumber')">
+                                                {{ getErrorMessage('emergencyNumber') }}
+                                            </small>
+
+                                        </div>
+                                        <div class="field-wrap">
+                                            <div class="field select-field">
+
+                                                <select id="relationship" aria-label="Relationship with the employee"
+                                                    required formControlName="relationship"
+                                                    [class.placeholder]="!proForm.get('relationship')?.value">
+                                                    <option value=""  disabled hidden>Relationship with the
+                                                        employee
+                                                    </option>
+                                                    <option *ngFor="let r of relationships" [value]="r">{{ r }}</option>
+                                                </select>
+
+
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('relationship')">
+                                                {{ getErrorMessage('relationship') }}
+                                            </small>
+
+                                        </div>
+
                                     </div>
                                 </section>
 
@@ -371,21 +551,39 @@
                                             <input id="id" type="text" formControlName="id" placeholder="Employee Id"
                                                 readonly />
                                         </div>
-                                        <div class="field select-field">
+                                        <div class="field-wrap">
+                                            <div class="field select-field">
+                                                <span class="req-star" *ngIf="showStar('department')">*</span>
 
-                                            <select id="department" aria-label="department" required
-                                                formControlName="department">
-                                                <option value="" selected disabled hidden>Department</option>
-                                                <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
-                                            </select>
+                                                <select id="department" aria-label="department" required
+                                                    formControlName="department"
+                                                    [class.placeholder]="!proForm.get('department')?.value">
+                                                    <option value=""  disabled hidden>Department</option>
+                                                    <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+                                                </select>
+
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('department')">
+                                                {{ getErrorMessage('department') }}
+                                            </small>
+
                                         </div>
-                                        <div class="field select-field">
-                                            <select id="designation" formControlName="designation"
-                                                [disabled]="!designations.length">
-                                                <option value="" disabled selected hidden>Designation</option>
-                                                <option *ngFor="let d of designations" [value]="d">{{ d }}</option>
-                                            </select>
+                                        <div class="field-wrap">
+                                            <div class="field select-field">
+                                                <span class="req-star" *ngIf="showStar('designation')">*</span>
+                                                <select id="designation" formControlName="designation"
+                                                    [class.placeholder]="!proForm.get('designation')?.value">
+                                                    <option value=""  hidden>Designation</option>
+                                                    <option *ngFor="let d of designations" [value]="d">{{ d }}</option>
+                                                </select>
+
+                                            </div>
+                                            <small class="error" *ngIf="isInvalid('designation')">
+                                                {{ getErrorMessage('designation') }}
+                                            </small>
+
                                         </div>
+
                                         <div class="field">
                                             <input id="accessCode" type="text" formControlName="accessCode"
                                                 placeholder="Access Code" readonly />
@@ -418,54 +616,91 @@
                             </header>
 
                             <div class="fields">
-                                <div class="field select-field">
+                                <div class="field-wrap">
+                                    <div class="field select-field">
+                                        <span class="req-star" *ngIf="showStar('contractType')">*</span>
+                                        <select id="contractType" aria-label="type of contract" required
+                                            formControlName="contractType"
+                                            [class.placeholder]="!proForm.get('contractType')?.value">
+                                            <option value=""  disabled hidden>Type of contract
+                                            </option>
+                                            <option *ngFor="let r of contractTypes" [value]="r">{{ r }}</option>
+                                        </select>
 
-                                    <select id="contractType" aria-label="type of contract" required
-                                        formControlName="contractType">
-                                        <option value="" selected disabled hidden>Type of contract
-                                        </option>
-                                        <option *ngFor="let r of contractTypes" [value]="r">{{ r }}</option>
-                                    </select>
+                                    </div>
+                                    <small class="error" *ngIf="isInvalid('contractType')">
+                                        {{ getErrorMessage('contractType') }}
+                                    </small>
+
                                 </div>
-                                <div class="field">
-                                    <input id="weekly-work" type="time" placeholder="Weekly work time"
-                                        formControlName="weeklyWork" />
+                                <div class="field-wrap">
+                                    <div class="field">
+                                        <input type="text" formControlName="weeklyWork" placeholder="Weekly work"
+                                            pattern="^([0-9]{1,3}):[0-5][0-9]$" />
+                                        <span class="req-star" *ngIf="showStar('weeklyWork')">*</span>
+                                    </div>
+                                    <small class="error" *ngIf="isInvalid('weeklyWork')">
+                                        {{ getErrorMessage('weeklyWork') }}
+                                    </small>
+
                                 </div>
-                                <div class="field date-field">
-                                    <input #contractStart id="contractStart" type="date" required
-                                        formControlName="contractStart" />
-                                    <span class="date-placeholder">Contract start date</span>
+                                <div class="field-wrap">
+                                    <div class="field date-field">
+                                        <input #contractStart id="contractStart" type="date" required
+                                            formControlName="contractStart"
+                                            [class.invalid]="isInvalidRequired('contractStart')" /><span
+                                            class="req-star" *ngIf="showStar('contractStart')">*</span>
+                                        <span class="date-placeholder">Contract start date</span>
 
+                                        <button type="button" class="date-trigger" aria-label="Open calendar"
+                                            (click)="openDate(contractStart)">
 
-                                    <button type="button" class="date-trigger" aria-label="Open calendar"
-                                        (click)="openDate(contractStart)">
+                                            <svg viewBox="3 0 24 24" aria-hidden="true">
+                                                <path
+                                                    d="M7 2v2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 6v9H5V8h14z"
+                                                    fill="currentColor" />
+                                                <rect x="7" y="11" width="4" height="3" rx="1" ry="1"
+                                                    fill="currentColor" opacity=".4" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <small class="error" *ngIf="isInvalid('contractStart')">
+                                        {{ getErrorMessage('contractStart') }}
+                                    </small>
 
-                                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                                            <path
-                                                d="M7 2v2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 6v9H5V8h14z"
-                                                fill="currentColor" />
-                                            <rect x="7" y="11" width="4" height="3" rx="1" ry="1" fill="currentColor"
-                                                opacity=".4" />
-                                        </svg>
-                                    </button>
                                 </div>
-                                <div class="field date-field">
-                                    <input #trialEnd id="trialEnd" type="date" required formControlName="trialEnd" />
-                                    <span class="date-placeholder">End date of trial period</span>
+
+                                <div class="field-wrap">
+                                    <div class="field date-field">
+                                        <input #trialEnd id="trialEnd" type="date" required formControlName="trialEnd"
+                                            [max]="proForm.get('contractStart')?.value || null"
+                                            [class.invalid]="isInvalidRequired('trialEnd')" /><span class="req-star"
+                                            *ngIf="showStar('trialEnd')">*</span>
+                                        <span class="date-placeholder">End of trial period</span>
+                                        <span class="req-msg" *ngIf="isInvalidRequired('trialEnd')">This field is
+                                            required
+                                        </span>
 
 
-                                    <button type="button" class="date-trigger" aria-label="Open calendar"
-                                        (click)="openDate(trialEnd)">
 
-                                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                                            <path
-                                                d="M7 2v2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 6v9H5V8h14z"
-                                                fill="currentColor" />
-                                            <rect x="7" y="11" width="4" height="3" rx="1" ry="1" fill="currentColor"
-                                                opacity=".4" />
-                                        </svg>
-                                    </button>
+                                        <button type="button" class="date-trigger" aria-label="Open calendar"
+                                            (click)="openDate(trialEnd)">
+
+                                            <svg viewBox="3 0 24 24" aria-hidden="true">
+                                                <path
+                                                    d="M7 2v2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 6v9H5V8h14z"
+                                                    fill="currentColor" />
+                                                <rect x="7" y="11" width="4" height="3" rx="1" ry="1"
+                                                    fill="currentColor" opacity=".4" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <small class="error" *ngIf="isInvalid('trialEnd')">
+                                        {{ getErrorMessage('trialEnd') }}
+                                    </small>
+
                                 </div>
+
 
 
                             </div>
@@ -480,13 +715,28 @@
                             </header>
 
                             <div class="fields">
-                                <div class="field">
-                                    <input id="gross-salary" type="text" placeholder="Gross monthly salary"
-                                        formControlName="grossSalary" />
+                                <div class="field-wrap">
+                                    <div class="field">
+                                        <input id="gross-salary" type="text" placeholder="Gross monthly salary"
+                                            formControlName="grossSalary" /><span class="req-star"
+                                            *ngIf="showStar('grossSalary')">*</span>
+
+                                    </div>
+                                    <small class="error" *ngIf="isInvalid('grossSalary')">
+                                        {{ getErrorMessage('grossSalary') }}
+                                    </small>
+
                                 </div>
-                                <div class="field">
-                                    <input id="gross-hourly-rate" type="text" placeholder="Gross hourly rate"
-                                        formControlName="grossHourlyRate" />
+                                <div class="field-wrap">
+                                    <div class="field">
+                                        <input id="gross-hourly-rate" type="text" placeholder="Gross hourly rate"
+                                            formControlName="grossHourlyRate" /><span class="req-star"
+                                            *ngIf="showStar('grossHourlyRate')">*</span>
+
+                                    </div>
+                                    <small class="error" *ngIf="isInvalid('grossHourlyRate')">
+                                        {{ getErrorMessage('grossHourlyRate') }}
+                                    </small>
                                 </div>
 
                             </div>
