@@ -59,11 +59,12 @@ body {
   gap: 10px;
 }
 
-.user-img{
+.user-img {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  object-fit: cover;     /* ou contain */
+  object-fit: cover;
+  /* ou contain */
   object-position: center;
   background: #e5e7eb;
 }
@@ -463,7 +464,7 @@ tbody td {
 
 }
 
-/* Content grid: form + uploader */
+
 .card__content {
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -471,7 +472,7 @@ tbody td {
   padding: 20px 4px;
 }
 
-/* Footer */
+
 .card__footer {
   display: flex;
   justify-content: flex-end;
@@ -509,20 +510,11 @@ tbody td {
 
 
 
-
-
-
-
-
-
-
-
-
-
 /* Conteneur encadré */
 .upload-box {
+  overflow: hidden;
+  height: 260px;
   width: 100%;
-  min-height: 40px;
   border: 1px solid #e6ecef;
   border-radius: 12px;
   background: #fff;
@@ -531,6 +523,43 @@ tbody td {
   place-items: center;
   transition: border-color .2s, background-color .2s, box-shadow .2s;
   margin-bottom: 50px;
+
+}
+
+.upload-chosen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.preview-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* IMPORTANT pour que l'image ne force pas */
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 8px;
+}
+.meta-area{
+  flex: 0 0 48px;           /* hauteur fixe */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-top: 1px solid #eef2f6;
+  background: #fff;
+}
+
+/* image s'adapte au cadre */
+.preview-area .upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* image complète */
+  display: block;
 }
 
 .upload-box:hover {
@@ -543,7 +572,7 @@ tbody td {
   box-shadow: 0 0 0 4px rgba(31, 197, 178, .12);
 }
 
-/* Contenu centré */
+
 .upload-content {
   text-align: center;
   display: grid;
@@ -568,7 +597,7 @@ tbody td {
   height: 22px;
 }
 
-/* Titres / sous-titres */
+
 .upload-title {
   font: 600 18px/1.3 Lexend, system-ui, sans-serif;
   color: #1f2428;
@@ -593,13 +622,7 @@ tbody td {
   color: #7b7f86;
 }
 
-.upload-chosen {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-}
+
 
 .file-badge {
   width: 20px;
@@ -607,20 +630,20 @@ tbody td {
   opacity: .7;
 }
 
-.upload-filename {
+.meta-area .upload-filename {
   flex: 1;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  /* coupe proprement si très long */
   font: 500 14px/1 Lexend, system-ui, sans-serif;
   color: #2b2b2f;
 }
 
-.clear-file {
+.meta-area .clear-file {
   border: 1px solid #e2e6ea;
   background: #fff;
   border-radius: 8px;
+  margin: 0;
   width: 28px;
   height: 28px;
   line-height: 26px;
@@ -632,14 +655,12 @@ tbody td {
   background: #f5f7f9;
 }
 
-/************/
-/* Nom du fichier choisi */
 
 
 .form-upload-grid {
   display: grid;
   grid-template-columns: 1fr 360px;
-  /* form / upload */
+
   gap: 24px;
 }
 
@@ -649,7 +670,7 @@ tbody td {
   }
 }
 
-/* ===== Formulaire ===== */
+
 .grid-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -660,9 +681,7 @@ tbody td {
   grid-column: span 2;
 }
 
-/* Address sur 2 colonnes */
 
-/* Wrapper unifié – 1 seule bordure (supprime les doubles) */
 .field {
   position: relative;
   display: flex;
@@ -672,14 +691,14 @@ tbody td {
   background: #fff;
   padding: 0 14px;
   height: 37px;
-  /* hauteur correcte */
+
 }
 
 .field input,
 .field select {
   flex: 1;
   border: 0 !important;
-  /* pas de bordure interne */
+
   outline: none !important;
   background: transparent !important;
   height: 100%;
@@ -692,20 +711,20 @@ tbody td {
   color: #9CA3AF;
 }
 
-/* Focus */
+
 .field:focus-within {
   border-color: #84B4D4;
   box-shadow: 0 0 0 3px rgba(132, 180, 212, .15);
 }
 
-/* ===== Select : petit bouton simple (flèche) ===== */
+
 .select-field select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239CA3AF' d='M1.41 0L6 4.59 10.59 0 12 1.41 6 7.41 0 1.41z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 28px;
-  /* place pour la flèche */
+
   cursor: pointer;
   color: #2b2f36;
 }
@@ -715,8 +734,7 @@ tbody td {
   color: #9CA3AF;
 }
 
-/* ===== Date : placeholder "Birth date" gris ===== */
-/* Le placeholder visuel est un span positionné, masqué quand une valeur est présente. */
+
 .date-field {
   position: relative;
   display: flex;
@@ -729,7 +747,7 @@ tbody td {
 
 }
 
-/* input intégralement transparent (pas de double bordure) */
+
 .date-field input[type="date"] {
   flex: 1;
   border: 0;
@@ -739,22 +757,23 @@ tbody td {
   font-size: 14px;
   color: #2b2f36;
   padding-right: 40px;
-  /* place pour l'icône / picker natif */
+
 }
 
-/* Placeholder visuel "Date of Birth" */
+
 .date-placeholder {
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 14px;
-  color: #9CA3AF;
-  /* gris comme les autres */
+  color: #9aa3ad;
   pointer-events: none;
+  font-size: 14px;
 }
 
-/* Icône calendrier à droite */
+
+
+
 .date-icon {
   position: absolute;
   right: 12px;
@@ -764,7 +783,7 @@ tbody td {
   height: 18px;
   color: #9CA3AF;
   pointer-events: none;
-  /* laisse le clic au picker natif */
+
 }
 
 .date-field {
@@ -777,6 +796,9 @@ tbody td {
   height: 52px;
   padding: 0 14px;
 }
+
+
+
 
 .date-field input[type="date"] {
   flex: 1;
@@ -788,15 +810,29 @@ tbody td {
   padding-right: 44px;
 }
 
-/* cacher le texte "jj/mm/aaaa" tant que vide (optionnel) */
-.date-field input[type="date"]:not(:valid),
-.date-field input[type="date"]:not(:valid)::-webkit-datetime-edit,
-.date-field input[type="date"]:not(:valid)::-webkit-datetime-edit-text,
-.date-field input[type="date"]:not(:valid)::-webkit-datetime-edit-month-field,
-.date-field input[type="date"]:not(:valid)::-webkit-datetime-edit-day-field,
-.date-field input[type="date"]:not(:valid)::-webkit-datetime-edit-year-field {
+.date-field input[type="date"]:disabled,
+.date-field input[type="date"]:disabled::-webkit-datetime-edit {
+  color: #2b2f36 !important;
+  -webkit-text-fill-color: #2b2f36 !important;
+  opacity: 1 !important;
+}
+
+
+.date-field input[type="date"]:not(:disabled):not(:valid),
+.date-field input[type="date"]:not(:disabled):not(:valid)::-webkit-datetime-edit,
+.date-field input[type="date"]:not(:disabled):not(:valid)::-webkit-datetime-edit-text,
+.date-field input[type="date"]:not(:disabled):not(:valid)::-webkit-datetime-edit-month-field,
+.date-field input[type="date"]:not(:disabled):not(:valid)::-webkit-datetime-edit-day-field,
+.date-field input[type="date"]:not(:disabled):not(:valid)::-webkit-datetime-edit-year-field {
   color: transparent !important;
 }
+
+.field select:disabled {
+  color: #2b2f36 !important;
+  -webkit-text-fill-color: #2b2f36 !important;
+  opacity: 1 !important;
+}
+
 
 .date-field input[type="date"]:valid {
   color: #2b2f36 !important;
@@ -807,9 +843,7 @@ tbody td {
   width: 32px;
 }
 
-/* zone reste cliquable */
 
-/* faux placeholder */
 .date-placeholder {
   position: absolute;
   left: 14px;
@@ -828,7 +862,6 @@ tbody td {
   display: none;
 }
 
-/* bouton cliquable par-dessus à droite */
 .date-trigger {
   position: absolute;
   right: 6px;
@@ -859,15 +892,14 @@ tbody td {
   background: #fff;
 }
 
-/* Une colonne */
 .section {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  /* espace entre header et champs */
+
 }
 
-/* En-tête de colonne (petite icône + titre bleu) */
+
 .section__header {
   display: flex;
   align-items: center;
@@ -882,7 +914,7 @@ tbody td {
   display: grid;
   place-items: center;
   background: #eaf4fb;
-  /* léger fond bleu comme sur l’UI */
+
   border: 1px solid #d9e7f5;
 }
 
@@ -896,10 +928,9 @@ tbody td {
   font-weight: 600;
   font-size: 14px;
   color: #6aa6c9;
-  /* bleu titre section */
+
 }
 
-/* Pile de champs à l’intérieur d’une colonne */
 .fields {
   display: flex;
   flex-direction: column;
@@ -908,16 +939,17 @@ tbody td {
 
 
 
-/* grille */
+
 .role-grid {
   display: flex;
   gap: 28px;
   align-items: center;
   flex-wrap: wrap;
+  margin-bottom: 15px;
 
 }
 
-/* carte externe */
+
 .role-card {
   border: 1px solid #eef2f6;
   background: #fff;
@@ -944,23 +976,23 @@ tbody td {
   box-shadow: 0 0 0 3px rgba(31, 197, 178, .25);
 }
 
-/* état sélectionné */
+
 .role-card.is-active {
   border-color: var(--teal, #1fc5b2);
 }
 
-/* pilule interne */
+
 .role-pill {
   display: inline-block;
   padding: 10px 24px;
   border-radius: 12px;
   background: #e6f6fb;
-  /* bleu pâle */
+
   color: #173a3f;
   font: 600 14px/1 Lexend, system-ui, sans-serif;
 }
 
-/* optionnel : pilule un peu plus soutenue quand actif */
+
 .role-card.is-active .role-pill {
   background: #d5eef5;
   color: #0e2f32;
@@ -1038,10 +1070,10 @@ tbody td {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  /* espace entre box et erreur */
+
 }
 
-/* IMPORTANT: retirer le margin-top sur .error sinon double espace */
+
 .field-wrap .error {
   margin-top: 0;
   font-size: 12px;
@@ -1049,12 +1081,27 @@ tbody td {
   text-align: left;
 }
 
-.upload-preview {
+
+.line-manager-wrap {
   width: 100%;
-  height: 220px;
-  /* ajuste si tu veux */
-  object-fit: cover;
-  border-radius: 14px;
+  max-width: 520px;   
+  margin-top: 16px;
+}
+
+.lm-label {
   display: block;
-  margin-bottom: 10px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.line-manager-field{
+  width: 100%;
+  max-width: 680px; 
+  margin-top: 20px;  
+}
+
+.line-manager-field select {
+  width: 100%;
 }

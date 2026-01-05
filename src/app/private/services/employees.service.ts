@@ -32,15 +32,29 @@ export class EmployeesService {
     return this.http.get<any[]>(`${this.base}/employees`);
   }
 
-  createDraft(body: { email: string; previousDraftId?: string }) {
-    return this.http.post<{ employee: any; plainAccessCode: string | null }>(
+  createDraft(body: { email: string }) {
+    return this.http.post<{ draftToken: string; plainAccessCode: string }>(
       `${this.base}/employees/draft`,
       body
     );
   }
 
-  deleteDraft(id: string) {
-    return this.http.delete<{ ok: boolean }>(`${this.base}/employees/${id}/draft`);
+  submitDraft(body: { draftToken: string; details: any; roles: Role[] }) {
+    return this.http.post<{ employee: any; plainAccessCode?: string }>(
+      `${this.base}/employees/submit`,
+      body
+    );
+  }
+
+  deleteDraft(token: string) {
+    return this.http.delete(`${this.base}/employees/draft/${token}`);
+  }
+  getById(id: string) {
+    return this.http.get<any>(`${this.base}/employees/${id}`);
+  }
+
+  deleteEmployee(id: string) {
+    return this.http.delete<void>(`${this.base}/employees/${id}`);
   }
   //  
   /*

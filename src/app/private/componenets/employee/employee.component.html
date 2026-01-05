@@ -82,9 +82,12 @@
 
                                 <td>
                                     <div class="actions">
-                                        <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
-                                        <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
-                                        <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
+                                        <button class="action-btn" (click)="onSeen(e)"><img src="assets/images/see.svg"
+                                                alt=""></button>
+                                        <button class="action-btn" ><img src="assets/images/edit.svg" alt=""></button>
+                                        <button class="action-btn"
+                                            (click)="onDeleteEmployee(e.id); $event.stopPropagation()"><img
+                                                src="assets/images/delete.svg" alt=""></button>
                                     </div>
                                 </td>
                             </tr>
@@ -156,7 +159,7 @@
                                         <div class="field">
 
                                             <input id="firstName" type="text" placeholder="First Name"
-                                                formControlName="firstName" />
+                                                formControlName="firstName" [readonly]="mode==='view'" />
                                             <span class="req-star" *ngIf="showStar('firstName')">*</span>
 
                                         </div>
@@ -168,8 +171,8 @@
                                     <div class="field-wrap">
                                         <div class="field">
                                             <input id="lastName" type="text" placeholder="Last Name"
-                                                formControlName="lastName" /><span class="req-star"
-                                                *ngIf="showStar('lastName')">*</span>
+                                                formControlName="lastName" [readonly]="mode==='view'" /><span
+                                                class="req-star" *ngIf="showStar('lastName')">*</span>
 
                                         </div>
                                         <small class="error" *ngIf="isInvalid('lastName')">
@@ -184,8 +187,8 @@
                                     <div class="field-wrap">
                                         <div class="field">
                                             <input id="mobile" type="tel" placeholder="Mobile Number"
-                                                formControlName="mobile" /><span class="req-star"
-                                                *ngIf="showStar('mobile')">*</span>
+                                                formControlName="mobile" [readonly]="mode==='view'" /><span
+                                                class="req-star" *ngIf="showStar('mobile')">*</span>
 
                                         </div>
                                         <small class="error" *ngIf="isInvalid('mobile')">
@@ -196,8 +199,8 @@
                                     <div class="field-wrap">
                                         <div class="field">
                                             <input id="email" type="email" placeholder="Email Address"
-                                                formControlName="email" /><span class="req-star"
-                                                *ngIf="showStar('email')">*</span>
+                                                formControlName="email" [readonly]="mode==='view'" /><span
+                                                class="req-star" *ngIf="showStar('email')">*</span>
 
                                         </div>
                                         <small class="error" *ngIf="isInvalid('email')">
@@ -208,18 +211,21 @@
 
                                     <!-- Row 3 : Birth date + Marital -->
                                     <div class="field-wrap">
-                                        <div class="field date-field">
+                                        <div class="field date-field" [class.has-value]="!!proForm.get('dob')?.value"
+                                            [class.is-view]="mode==='view'">
                                             <input #dob id="dob" type="date" [max]="today" required
-                                                formControlName="dob" [class.invalid]="isInvalidRequired('dob')" /><span
-                                                class="req-star" *ngIf="showStar('dob')">*</span>
+                                                formControlName="dob" [readonly]="mode==='view'"
+                                                [class.invalid]="isInvalidRequired('dob')" /><span class="req-star"
+                                                *ngIf="showStar('dob')">*</span>
 
-                                            <span class="date-placeholder">Date of Birth</span>
+                                            <span class="date-placeholder" *ngIf="!proForm.get('dob')?.value">Date of
+                                                Birth</span>
 
 
 
                                             <!-- bouton transparent qui ouvre le date picker -->
                                             <button type="button" class="date-trigger" aria-label="Open calendar"
-                                                (click)="openDate(dob)">
+                                                [disabled]="mode==='view'" (click)="mode!=='view' && openDate(dob)">
                                                 <!-- icône agenda -->
                                                 <svg viewBox="3 0 24 24" aria-hidden="true">
                                                     <path
@@ -239,10 +245,10 @@
                                         <div class="field select-field">
                                             <span class="req-star" *ngIf="showStar('maritalStatus')">*</span>
                                             <select id="marital" aria-label="Marital Status" required
-                                                formControlName="maritalStatus"
+                                                formControlName="maritalStatus" [disabled]="mode==='view'"
                                                 [class.placeholder]="!proForm.get('maritalStatus')?.value">
 
-                                                <option value=""  disabled hidden>Marital Status</option>
+                                                <option value="" disabled hidden>Marital Status</option>
                                                 <option *ngFor="let m of maritalStatuses" [value]="m">{{ m }}</option>
                                             </select>
 
@@ -259,10 +265,10 @@
                                         <div class="field-wrap">
                                             <div class="field select-field">
                                                 <select id="gender" aria-label="Gender" required
-                                                    formControlName="gender"
+                                                    formControlName="gender" [disabled]="mode==='view'"
                                                     [class.placeholder]="!proForm.get('gender')?.value">
 
-                                                    <option value=""  disabled hidden>Gender</option>
+                                                    <option value="" disabled hidden>Gender</option>
                                                     <option *ngFor="let g of genders" [value]="g">{{ g }}</option>
                                                 </select>
                                             </div>
@@ -276,7 +282,7 @@
                                     <div class="field-wrap">
                                         <div class="field select-field">
                                             <select id="nationality" aria-label="Nationality" required
-                                                formControlName="nationality"
+                                                formControlName="nationality" [disabled]="mode==='view'"
                                                 [class.placeholder]="!proForm.get('nationality')?.value">
                                                 <option value="" disabled hidden>Nationnality</option>
                                                 <option *ngFor="let n of nationalities" [value]="n">{{ n }}</option>
@@ -292,8 +298,8 @@
                                     <div class="field-wrap">
                                         <div class="field span-2">
                                             <input id="address" type="text" placeholder="Address"
-                                                formControlName="address" /><span class="req-star"
-                                                *ngIf="showStar('address')">*</span>
+                                                formControlName="address" [readonly]="mode==='view'" /><span
+                                                class="req-star" *ngIf="showStar('address')">*</span>
 
                                         </div>
                                         <small class="error" *ngIf="isInvalid('address')">
@@ -310,8 +316,9 @@
                                         <div class="field select-field">
                                             <span class="req-star" *ngIf="showStar('state')">*</span>
                                             <select id="state" aria-label="State" required formControlName="state"
+                                                [disabled]="mode==='view'"
                                                 [class.placeholder]="!proForm.get('state')?.value">
-                                                <option value=""  disabled hidden>State</option>
+                                                <option value="" disabled hidden>State</option>
                                                 <option *ngFor="let s of states" [value]="s">{{ s }}</option>
                                             </select>
 
@@ -326,9 +333,9 @@
                                             <span class="req-star" *ngIf="showStar('city')">*</span>
 
                                             <select id="city" aria-label="City" required formControlName="city"
-                                                [disabled]="!cities.length"
+                                                [disabled]="mode==='view' || !cities.length"
                                                 [class.placeholder]="!proForm.get('city')?.value">
-                                                <option value=""  disabled hidden>City</option>
+                                                <option value="" disabled hidden>City</option>
                                                 <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
                                             </select>
 
@@ -342,7 +349,7 @@
                                     <div class="field-wrap">
                                         <div class="field">
                                             <input id="zip" type="text" inputmode="numeric" placeholder="ZIP Code"
-                                                formControlName="zip"><span class="req-star"
+                                                formControlName="zip" [readonly]="mode==='view'"><span class="req-star"
                                                 *ngIf="showStar('zip')">*</span>
 
                                         </div>
@@ -357,15 +364,17 @@
                                 </form>
 
                                 <!-- Colonne 2 : Upload visible -->
-                                <div class="upload-box" (dragover)="onDragOver($event)"
-                                    (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+                                <div class="upload-box" (dragover)="mode!=='view' && onDragOver($event)"
+                                    (dragleave)="mode!=='view' && onDragLeave($event)"
+                                    (drop)="mode!=='view' && onDrop($event)">
 
-                                    <input #fileInput type="file" (change)="onFileSelected($event)" hidden>
+                                    <input #fileInput type="file" (change)="mode!=='view' && onFileSelected($event)"
+                                        [disabled]="mode==='view'" hidden>
 
                                     <!-- Affichage par défaut (aucun fichier) -->
-                                    <ng-container *ngIf="!fileName; else fileChosen">
+                                    <ng-container *ngIf="(!fileName && !viewPhotoUrl); else fileChosen">
                                         <div class="upload-content">
-                                            <div class="upload-icon-wrap" (click)="fileInput.click()">
+                                            <div class="upload-icon-wrap" (click)="mode!=='view' && fileInput.click()">
                                                 <svg viewBox="0 0 24 24" class="upload-icon" aria-hidden="true">
                                                     <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17a4 4 0 004 4h8a4 4 0 004-4"
                                                         fill="none" stroke="currentColor" stroke-width="1.8"
@@ -384,22 +393,31 @@
                                     <!-- Affichage quand un fichier est choisi : uniquement le nom -->
                                     <ng-template #fileChosen>
                                         <div class="upload-chosen" title="{{ fileName }}">
-                                            <!-- ✅ Preview si image -->
-                                            <img *ngIf="filePreviewUrl" class="upload-preview" [src]="filePreviewUrl"
-                                                alt="Employee photo" />
+                                            <div class="preview-area">
+                                                <!--  Preview si image -->
+                                                <img *ngIf="filePreviewUrl || viewPhotoUrl" class="upload-preview"
+                                                    [src]="filePreviewUrl || viewPhotoUrl" alt="Employee photo" />
 
-                                            <!-- sinon icône fichier -->
-                                            <svg *ngIf="!filePreviewUrl" class="file-badge" viewBox="0 0 24 24"
-                                                aria-hidden="true">
-                                                <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
-                                                    fill="currentColor" opacity=".12" />
-                                                <path d="M14 2v6h6" stroke="currentColor" fill="none" />
-                                            </svg>
+                                                <!-- sinon icône fichier -->
+                                                <svg *ngIf="mode !== 'view' && !filePreviewUrl" class="file-badge"
+                                                    viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path
+                                                        d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
+                                                        fill="currentColor" opacity=".12" />
+                                                    <path d="M14 2v6h6" stroke="currentColor" fill="none" />
+                                                </svg>
 
-                                            <span class="upload-filename">{{ fileName }}</span>
+                                            </div>
 
-                                            <button type="button" class="clear-file"
-                                                (click)="clearFile($event)">×</button>
+
+                                            <div class="meta-area">
+                                                <span class="upload-filename" *ngIf="fileName">{{ fileName }}</span>
+
+                                                <button type="button" class="clear-file" *ngIf="mode !== 'view'"
+                                                    (click)="clearFile($event)">×</button>
+
+                                            </div>
+
                                         </div>
                                     </ng-template>
                                 </div>
@@ -407,7 +425,8 @@
 
                             <footer class="card__footer">
                                 <button type="button" class="btn btn--ghost" (click)="onCancelAdd()">Cancel</button>
-                                <button type="button" class="btn btn--primary" (click)="onPrimaryAction()">Next</button>
+                                <button type="button" class="btn btn--primary"
+                                    (click)="mode === 'view' ? nextPreview() : onPrimaryAction()">Next</button>
                             </footer>
 
 
@@ -428,7 +447,8 @@
                                             <div class="field">
                                                 <input id="account-holder" type="text"
                                                     placeholder="name of the account holder"
-                                                    formControlName="bankAccountHolder" /><span class="req-star"
+                                                    formControlName="bankAccountHolder"
+                                                    [readonly]="mode==='view'" /><span class="req-star"
                                                     *ngIf="showStar('bankAccountHolder')">*</span>
 
                                             </div>
@@ -439,8 +459,8 @@
                                         </div>
                                         <div class="field-wrap">
                                             <div class="field">
-                                                <input id="rib" type="text" placeholder="RIB"
-                                                    formControlName="rib" /><span class="req-star"
+                                                <input id="rib" type="text" placeholder="RIB" formControlName="rib"
+                                                    [readonly]="mode==='view'" /><span class="req-star"
                                                     *ngIf="showStar('rib')">*</span>
 
                                             </div>
@@ -466,8 +486,8 @@
                                         <div class="field-wrap">
                                             <div class="field">
                                                 <input id="cnss" type="text" placeholder="CNSS number"
-                                                    formControlName="cnss" /><span class="req-star"
-                                                    *ngIf="showStar('cnss')">*</span>
+                                                    formControlName="cnss" [readonly]="mode==='view'" /><span
+                                                    class="req-star" *ngIf="showStar('cnss')">*</span>
 
 
                                             </div>
@@ -480,7 +500,8 @@
                                             <div class="field">
                                                 <input id="emergency-first-name" type="text"
                                                     placeholder="Emergency Contact First Name"
-                                                    formControlName="emergencyFirstName" /><span class="req-star"
+                                                    formControlName="emergencyFirstName"
+                                                    [readonly]="mode==='view'" /><span class="req-star"
                                                     *ngIf="showStar('emergencyFirstName')">*</span>
 
                                             </div>
@@ -492,7 +513,8 @@
                                             <div class="field">
                                                 <input id="emergency-last-name" type="text"
                                                     placeholder="Emergency Contact last Name"
-                                                    formControlName="emergencyLastName" /><span class="req-star"
+                                                    formControlName="emergencyLastName"
+                                                    [readonly]="mode==='view'" /><span class="req-star"
                                                     *ngIf="showStar('emergencyLastName')">*</span>
 
                                             </div>
@@ -505,8 +527,8 @@
                                             <div class="field">
                                                 <input id="emergency-last-name-2" type="text"
                                                     placeholder="Emergency Contact number"
-                                                    formControlName="emergencyNumber" /><span class="req-star"
-                                                    *ngIf="showStar('emergencyNumber')">*</span>
+                                                    formControlName="emergencyNumber" [readonly]="mode==='view'" /><span
+                                                    class="req-star" *ngIf="showStar('emergencyNumber')">*</span>
 
                                             </div>
                                             <small class="error" *ngIf="isInvalid('emergencyNumber')">
@@ -518,9 +540,9 @@
                                             <div class="field select-field">
 
                                                 <select id="relationship" aria-label="Relationship with the employee"
-                                                    required formControlName="relationship"
+                                                    required formControlName="relationship" [disabled]="mode==='view'"
                                                     [class.placeholder]="!proForm.get('relationship')?.value">
-                                                    <option value=""  disabled hidden>Relationship with the
+                                                    <option value="" disabled hidden>Relationship with the
                                                         employee
                                                     </option>
                                                     <option *ngFor="let r of relationships" [value]="r">{{ r }}</option>
@@ -556,9 +578,9 @@
                                                 <span class="req-star" *ngIf="showStar('department')">*</span>
 
                                                 <select id="department" aria-label="department" required
-                                                    formControlName="department"
+                                                    formControlName="department" [disabled]="mode==='view'"
                                                     [class.placeholder]="!proForm.get('department')?.value">
-                                                    <option value=""  disabled hidden>Department</option>
+                                                    <option value="" disabled hidden>Department</option>
                                                     <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
                                                 </select>
 
@@ -572,8 +594,9 @@
                                             <div class="field select-field">
                                                 <span class="req-star" *ngIf="showStar('designation')">*</span>
                                                 <select id="designation" formControlName="designation"
+                                                    [disabled]="mode==='view'"
                                                     [class.placeholder]="!proForm.get('designation')?.value">
-                                                    <option value=""  hidden>Designation</option>
+                                                    <option value="" hidden>Designation</option>
                                                     <option *ngFor="let d of designations" [value]="d">{{ d }}</option>
                                                 </select>
 
@@ -584,7 +607,7 @@
 
                                         </div>
 
-                                        <div class="field">
+                                        <div class="field" *ngIf="mode !== 'view'">
                                             <input id="accessCode" type="text" formControlName="accessCode"
                                                 placeholder="Access Code" readonly />
                                         </div>
@@ -592,7 +615,7 @@
                                 </section>
                             </div>
                             <footer class="card__footer">
-                                <button type="button" class="btn btn--ghost" (click)="onCancelAdd()">Cancel</button>
+                                <button type="button" class="btn btn--ghost" (click)="prevPreview()">Cancel</button>
                                 <button type="button" class="btn btn--primary"
                                     (click)="goNextFromPreview()">Next</button>
                             </footer>
@@ -620,9 +643,9 @@
                                     <div class="field select-field">
                                         <span class="req-star" *ngIf="showStar('contractType')">*</span>
                                         <select id="contractType" aria-label="type of contract" required
-                                            formControlName="contractType"
+                                            formControlName="contractType" [disabled]="mode==='view'"
                                             [class.placeholder]="!proForm.get('contractType')?.value">
-                                            <option value=""  disabled hidden>Type of contract
+                                            <option value="" disabled hidden>Type of contract
                                             </option>
                                             <option *ngFor="let r of contractTypes" [value]="r">{{ r }}</option>
                                         </select>
@@ -635,8 +658,8 @@
                                 </div>
                                 <div class="field-wrap">
                                     <div class="field">
-                                        <input type="text" formControlName="weeklyWork" placeholder="Weekly work"
-                                            pattern="^([0-9]{1,3}):[0-5][0-9]$" />
+                                        <input type="text" formControlName="weeklyWork" [readonly]="mode==='view'"
+                                            placeholder="Weekly work" pattern="^([0-9]{1,3}):[0-5][0-9]$" />
                                         <span class="req-star" *ngIf="showStar('weeklyWork')">*</span>
                                     </div>
                                     <small class="error" *ngIf="isInvalid('weeklyWork')">
@@ -645,15 +668,20 @@
 
                                 </div>
                                 <div class="field-wrap">
-                                    <div class="field date-field">
+                                    <div class="field date-field"
+                                        [class.has-value]="!!proForm.get('contractStart')?.value"
+                                        [class.is-view]="mode==='view'">
                                         <input #contractStart id="contractStart" type="date" required
                                             formControlName="contractStart"
+                                            [attr.readonly]="mode==='view' ? true : null"
                                             [class.invalid]="isInvalidRequired('contractStart')" /><span
                                             class="req-star" *ngIf="showStar('contractStart')">*</span>
-                                        <span class="date-placeholder">Contract start date</span>
+                                        <span class="date-placeholder"
+                                            *ngIf="!proForm.get('contractStart')?.value">Contract start date</span>
 
                                         <button type="button" class="date-trigger" aria-label="Open calendar"
-                                            (click)="openDate(contractStart)">
+                                            [disabled]="mode==='view'"
+                                            (click)="mode!=='view' && openDate(contractStart)">
 
                                             <svg viewBox="3 0 24 24" aria-hidden="true">
                                                 <path
@@ -671,20 +699,21 @@
                                 </div>
 
                                 <div class="field-wrap">
-                                    <div class="field date-field">
+                                    <div class="field date-field" [class.has-value]="!!proForm.get('trialEnd')?.value"
+                                        [class.is-view]="mode==='view'">
                                         <input #trialEnd id="trialEnd" type="date" required formControlName="trialEnd"
+                                            [attr.readonly]="mode==='view' ? true : null"
                                             [max]="proForm.get('contractStart')?.value || null"
                                             [class.invalid]="isInvalidRequired('trialEnd')" /><span class="req-star"
                                             *ngIf="showStar('trialEnd')">*</span>
-                                        <span class="date-placeholder">End of trial period</span>
-                                        <span class="req-msg" *ngIf="isInvalidRequired('trialEnd')">This field is
-                                            required
-                                        </span>
+                                        <span class="date-placeholder" *ngIf="!proForm.get('trialEnd')?.value">End of
+                                            trial period</span>
+
 
 
 
                                         <button type="button" class="date-trigger" aria-label="Open calendar"
-                                            (click)="openDate(trialEnd)">
+                                            [disabled]="mode==='view'" (click)="mode!=='view' && openDate(trialEnd)">
 
                                             <svg viewBox="3 0 24 24" aria-hidden="true">
                                                 <path
@@ -718,8 +747,8 @@
                                 <div class="field-wrap">
                                     <div class="field">
                                         <input id="gross-salary" type="text" placeholder="Gross monthly salary"
-                                            formControlName="grossSalary" /><span class="req-star"
-                                            *ngIf="showStar('grossSalary')">*</span>
+                                            formControlName="grossSalary" [readonly]="mode==='view'" /><span
+                                            class="req-star" *ngIf="showStar('grossSalary')">*</span>
 
                                     </div>
                                     <small class="error" *ngIf="isInvalid('grossSalary')">
@@ -730,8 +759,8 @@
                                 <div class="field-wrap">
                                     <div class="field">
                                         <input id="gross-hourly-rate" type="text" placeholder="Gross hourly rate"
-                                            formControlName="grossHourlyRate" /><span class="req-star"
-                                            *ngIf="showStar('grossHourlyRate')">*</span>
+                                            formControlName="grossHourlyRate" [readonly]="mode==='view'" /><span
+                                            class="req-star" *ngIf="showStar('grossHourlyRate')">*</span>
 
                                     </div>
                                     <small class="error" *ngIf="isInvalid('grossHourlyRate')">
@@ -752,51 +781,68 @@
 
 
                 </div>
-                <div *ngIf="activeTabs==='role'">
+                <div *ngIf="activeTabs==='role'" [formGroup]="proForm">
 
                     <div class="role-grid" role="radiogroup" aria-label="Select role">
                         <!-- Employee -->
                         <button type="button" class="role-card" role="radio"
                             [attr.aria-checked]="selectedRole==='employee'"
-                            [class.is-active]="selectedRole==='employee'" (click)="setRole('employee')">
+                            [class.is-active]="selectedRole==='employee'" [disabled]="mode==='view'"
+                            (click)="mode!=='view' && setRole('employee')">
                             <span class="role-pill">Employee</span>
                         </button>
 
                         <!-- Supervisor -->
                         <button type="button" class="role-card" role="radio"
                             [attr.aria-checked]="selectedRole==='supervisor'"
-                            [class.is-active]="selectedRole==='supervisor'" (click)="setRole('supervisor')">
+                            [class.is-active]="selectedRole==='supervisor'" [disabled]="mode==='view'"
+                            (click)="mode!=='view' && setRole('supervisor')">
                             <span class="role-pill">Supervisor</span>
                         </button>
+                        <button type="button" class="role-card" role="radio" [attr.aria-checked]="selectedRole==='hr'"
+                            [class.is-active]="selectedRole==='hr'" [disabled]="mode==='view'"
+                            (click)="mode!=='view' && setRole('hr')">
+                            <span class="role-pill">Hr</span>
+                        </button>
+
 
                         <!-- Admin -->
                         <button type="button" class="role-card" role="radio"
                             [attr.aria-checked]="selectedRole==='admin'" [class.is-active]="selectedRole==='admin'"
-                            (click)="setRole('admin')">
+                            [disabled]="mode==='view'" (click)="mode!=='view' && setRole('admin')">
                             <span class="role-pill">Admin</span>
                         </button>
 
 
                     </div>
-                    <div *ngIf="selectedRole === 'employee'" class="mt-4">
+                    <div class="field-wrap">
+                        <div  *ngIf="shouldShowLineManager()"  class="field select-field">
+                            
+                            <span class="req-star" *ngIf="showStar('lineManagerId')">*</span>
+                            <select id="lineManagerId" aria-label="Line Manager" required formControlName="lineManagerId"
+                                [disabled]="mode==='view'" [class.placeholder]="!proForm.get('lineManagerId')?.value">
 
-                        <div class="field">
+                                <option value="" disabled selected>Line Manager</option>
 
-                            <input id="lineManager" type="text" placeholder="Line manager">
+                                <option *ngFor="let m of filteredManagers" [value]="m.id">
+                                    {{ m.firstName }} {{ m.lastName }} ({{ m.email }})
+                                </option>
+                            </select>
 
                         </div>
+                        <small class="error" *ngIf="isInvalid('lineManagerId')">
+                            {{ getErrorMessage('lineManagerId') }}
+                        </small>
+
+
                     </div>
-
-
-
-
-
 
 
                     <footer class="card__footer">
                         <button type="button" class="btn btn--ghost" (click)="cancelFromRole()">Cancel</button>
 
-                        <button type="button" class="btn btn--primary" (click)="onSubmitAll()">Submit</button>
+                        <button type="button" class="btn btn--primary" *ngIf="mode !== 'view'"
+                            (click)="onSubmitAll()">Submit</button>
                     </footer>
 
 

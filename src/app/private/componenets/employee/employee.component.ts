@@ -32,9 +32,9 @@ export class EmployeeComponent implements OnInit {
   previewStep = 1;
   previewMaxStep = 2;
 
-  selectedRole: 'employee' | 'supervisor' | 'admin' = 'employee';
+  selectedRole: 'employee' | 'supervisor' | 'admin' | 'hr' = 'employee';
 
-  draftId: string | null = null;
+  draftToken: string | null = null;
   draftEmail: string | null = null;
   draftAccessCode: string | null = null;
   proForm!: FormGroup;
@@ -90,6 +90,7 @@ export class EmployeeComponent implements OnInit {
       trialEnd: ['', Validators.required],
       grossSalary: ['', Validators.required],
       grossHourlyRate: ['', Validators.required],
+      lineManagerId: [''],
 
     }, { validators: [this.trialEndBeforeStartValidator('contractStart', 'trialEnd')] });
     this.lookups.getStates().subscribe({
@@ -137,101 +138,75 @@ export class EmployeeComponent implements OnInit {
     });
 
     this.proForm.get('contractStart')?.valueChanges.subscribe(() => {
-      this.proForm.get('trialEnd')?.updateValueAndValidity();
-      this.proForm.updateValueAndValidity();
+      this.proForm.get('trialEnd')?.updateValueAndValidity({ emitEvent: false });
+      this.proForm.updateValueAndValidity({ emitEvent: false });
     });
 
     this.proForm.get('trialEnd')?.valueChanges.subscribe(() => {
-      this.proForm.get('contractStart')?.updateValueAndValidity();
-      this.proForm.updateValueAndValidity();
+      this.proForm.get('contractStart')?.updateValueAndValidity({ emitEvent: false });
+      this.proForm.updateValueAndValidity({ emitEvent: false });
     });
+
+    this.proForm.get('email')?.valueChanges.subscribe(() => {
+      const c = this.proForm.get('email');
+      if (!c?.errors) return;
+
+      if (c.errors['emailTaken']) {
+        const { emailTaken, ...rest } = c.errors;
+        c.setErrors(Object.keys(rest).length ? rest : null);
+      }
+
+      this.apiError = null;
+    });
+
+    this.refreshFilteredManagers();
+    this.updateLineManagerValidator();
+
 
   }
   onPrimaryAction() {
+    if (this.mode === 'view') return;
+
+    this.apiError = null;
+
+
+    this.submitted = true;
+
     const emailCtrl = this.proForm.get('email');
     emailCtrl?.markAsTouched();
+    emailCtrl?.updateValueAndValidity();
 
-    if (!emailCtrl || emailCtrl.invalid) {
-      this.submitted = true;
-      return;
-    }
 
-    const email = String(emailCtrl.value).trim().toLowerCase();
+    if (!emailCtrl || emailCtrl.invalid) return;
 
-    // ✅ 1) même email + draft existe => ne recrée rien, juste ré-affiche
-    if (this.draftId && this.draftEmail === email) {
-      this.proForm.patchValue({
-        id: this.draftId,
-        accessCode: this.draftAccessCode ?? this.proForm.get('accessCode')?.value
-      });
+    const email = String(emailCtrl.value || '').trim().toLowerCase();
+
+
+    if (this.draftToken && this.draftEmail === email) {
+      this.proForm.patchValue({ id: this.draftToken, accessCode: this.draftAccessCode });
       this.previewStep = 2;
       return;
     }
 
-    const oldDraftId = this.draftId;
+    this.employeesService.createDraft({ email }).subscribe({
+      next: (res) => {
+        this.draftToken = res.draftToken;
+        this.draftEmail = email;
+        this.draftAccessCode = res.plainAccessCode;
 
-    const callCreateDraft = () => {
-      this.employeesService.createDraft({
-        email,
-        previousDraftId: oldDraftId ?? undefined,
-      }).subscribe({
-        next: (res) => {
-          const empId = res?.employee?.id ?? null;
-          const plainCode = res?.plainAccessCode ?? null;
-
-          this.draftId = empId;
-          this.draftEmail = email;
-
-          // ✅ IMPORTANT: ne pas écraser le code par null
-          if (plainCode) this.draftAccessCode = plainCode;
-
-          this.createdId = empId;
-          this.plainAccessCode = plainCode;
-
-          this.proForm.patchValue({
-            id: empId,
-            accessCode: this.draftAccessCode
-          });
-          if (this.selectedFile) {
-            this.persistPhotoForEmployee(empId, this.selectedFile);
-          }
-
-          this.previewStep = 2;
-        },
-
-        // ✅ ton error handler inchangé
-        error: (err) => {
-          if (err?.status === 409) {
-            emailCtrl.setErrors({ ...(emailCtrl.errors ?? {}), emailTaken: true });
-            return;
-          }
-          this.handleApiError(err);
-        },
-      });
-    };
-
-    // ✅ 2) si email changé et on avait un draft => supprimer l’ancien pour éviter 2 emails en DB
-    if (oldDraftId) {
-      this.employeesService.deleteDraft(oldDraftId).subscribe({
-        next: () => {
-          this.draftId = null;
-          this.draftEmail = null;
-          this.draftAccessCode = null;
-          this.proForm.patchValue({ id: '', accessCode: '' });
-          callCreateDraft();
-        },
-        error: () => {
-          // même si delete échoue, on continue
-          callCreateDraft();
+        this.proForm.patchValue({ id: this.draftToken, accessCode: this.draftAccessCode });
+        if (this.selectedFile && this.draftToken) {
+          this.persistPhotoForEmployee(this.draftToken, this.selectedFile);
         }
-      });
-    } else {
-      callCreateDraft();
-    }
+        this.previewStep = 2;
 
 
-
+        this.submitted = false;
+      },
+      error: (err) => this.handleApiError(err),
+    });
   }
+
 
 
 
@@ -244,6 +219,8 @@ export class EmployeeComponent implements OnInit {
     this.employeesService.list().subscribe({
       next: (rows) => {
         this.employees = rows ?? [];
+        this.refreshManagersAll();
+        this.refreshFilteredManagers();
         this.goToPage(this.currentPage); // garde currentPage dans les limites
       },
       error: (err) => console.error('load employees error', err),
@@ -252,16 +229,35 @@ export class EmployeeComponent implements OnInit {
 
   submitted = false;
   ///////////////////////////
-  isInvalidRequired(name: string): boolean { const c = this.proForm.get(name); return !!c && c.hasError('required') && (c.touched || this.submitted); }
+  isInvalidRequired(name: string): boolean { if (this.mode === 'view') return false; const c = this.proForm.get(name); return !!c && c.hasError('required') && (c.touched || this.submitted); }
   apiError: string | null = null;
   private handleApiError(err: any) {
-    const msg = err?.error?.message;
+    console.log('STATUS', err?.status);
+    console.log('ERROR BODY', err?.error);
+    console.log('ERROR MESSAGE', err?.error?.message);
+    const emailCtrl = this.proForm?.get('email');
+
+    const status = err?.status;
+    const msg = err?.error?.message ?? err?.error?.error ?? err?.message;
+
+    const msgStr =
+      Array.isArray(msg) ? msg.join(' ') :
+        typeof msg === 'string' ? msg : '';
+
+    if (emailCtrl && (status === 409 || /already|exists|used|duplicate|taken/i.test(msgStr))) {
+      emailCtrl.setErrors({ ...(emailCtrl.errors || {}), emailTaken: true });
+
+      emailCtrl.markAsTouched();
+      emailCtrl.markAsDirty();
+
+
+
+      return;
+    }
 
     if (Array.isArray(msg)) this.apiError = msg.join(' • ');
     else if (typeof msg === 'string') this.apiError = msg;
     else this.apiError = 'Unexpected error, please try again';
-
-    console.error('API error:', err);
   }
 
   isInvalid(name: string): boolean {
@@ -270,6 +266,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   getErrorMessage(name: string): string {
+    if (this.mode === 'view') return '';
     const c = this.proForm.get(name);
     if (!c || !c.errors) return '';
 
@@ -295,17 +292,12 @@ export class EmployeeComponent implements OnInit {
     this.proForm.markAllAsTouched();
     if (this.proForm.invalid) return;
 
-    console.log('SUBMIT CLICKED ');
-
-    const id = this.draftId ?? this.createdId ?? this.proForm.get('id')?.value;
-    if (!id) {
+    if (!this.draftToken) {
       alert('Please click Next on Email step first.');
       return;
     }
 
     const v = this.proForm.getRawValue();
-
-    // 1) payload details (enlever les "" pour éviter validations backend)
     const detailsPayload: any = {
       firstName: v.firstName?.trim(),
       lastName: v.lastName?.trim(),
@@ -339,29 +331,40 @@ export class EmployeeComponent implements OnInit {
       trialEnd: v.trialEnd || undefined,
       grossSalary: v.grossSalary || undefined,
       grossHourlyRate: v.grossHourlyRate || undefined,
+      lineManagerId: v.lineManagerId || undefined,
     };
 
-    // 2) payload roles
+
     const roles: Role[] = [
       this.selectedRole === 'admin' ? Role.Admin :
         this.selectedRole === 'supervisor' ? Role.Supervisor :
-          Role.Employee
+          this.selectedRole === 'hr' ? Role.Hr :
+            Role.Employee
     ];
+    console.log('SUBMIT draftToken=', this.draftToken);
 
-    this.employeesService.saveDetails(id, detailsPayload).pipe(
-      switchMap(() => this.employeesService.updateRoles(id, roles))
-    ).subscribe({
-      next: () => {
-        this.draftId = null;
+    this.employeesService.submitDraft({
+      draftToken: this.draftToken,
+      details: detailsPayload,
+      roles
+    }).subscribe({
+      next: (res: any) => {
+        const newId = res?.employee?.id;
+        const draftId = this.draftToken;
+
+
+        if (newId && draftId) {
+          const draftPhoto = localStorage.getItem(`employee_photo_${draftId}`);
+          if (draftPhoto) {
+            localStorage.setItem(`employee_photo_${newId}`, draftPhoto);
+            localStorage.removeItem(`employee_photo_${draftId}`);
+          }
+        }
+        this.draftToken = null;
         this.draftEmail = null;
-        this.createdId = null;
-        this.plainAccessCode = null;
-        console.log('Saved details + roles');
-        this.apiError = null;
+        this.draftAccessCode = null;
         this.showAddEmployee = false;
-
         this.resetAddFlow();
-        this.activeTab = 'employees';
         this.loadEmployees();
 
       },
@@ -371,11 +374,11 @@ export class EmployeeComponent implements OnInit {
   private resetAddFlow() {
     this.submitted = false;
 
-    // vider les listes qui conditionnent des selects (sinon l'ancien choix reste visible)
+
     this.cities = [];
     this.designations = [];
 
-    // reset + valeurs explicites des selects à ''
+
     this.proForm.reset({
       email: '',
       firstName: '',
@@ -406,25 +409,32 @@ export class EmployeeComponent implements OnInit {
       trialEnd: '',
       grossSalary: '',
       grossHourlyRate: '',
+      lineManagerId: '',
     });
 
     this.proForm.markAsPristine();
     this.proForm.markAsUntouched();
     this.proForm.updateValueAndValidity();
 
+
+    this.mode = 'create';
+    this.selectedEmployeeId = null;
+    this.proForm.enable({ emitEvent: false });
+
     this.previewStep = 1;
     this.activeTabs = 'preview';
 
-    // reset upload preview
+
     this.fileName = '';
     this.selectedFile = null;
     this.filePreviewUrl = null;
 
-    // reset draft/id/code si tu veux un nouveau flow propre
+
     this.createdId = null;
-    this.draftId = null;
+    this.draftToken = null;
     this.draftEmail = null;
-    this.plainAccessCode = null;
+    this.draftAccessCode = null;
+    this.showAddEmployee = false;
   }
 
 
@@ -435,18 +445,32 @@ export class EmployeeComponent implements OnInit {
   }
 
   openAddEmployee(): void {
-    this.resetAddFlow();      
-    this.activeTab = 'employees';
+
+    this.mode = 'create';
+    this.selectedEmployeeId = null;
+
+    this.resetAddFlow();
+    this.proForm.enable({ emitEvent: false });
+
+    this.activeTabs = 'preview';
+    this.previewStep = 1;
+
+    this.viewPhotoUrl = null;
     this.showAddEmployee = true;
+    this.activeTab = 'employees';
   }
   closeAddEmployee(): void {
+    this.mode = 'create';
+    this.selectedEmployeeId = null;
+    this.proForm.enable({ emitEvent: false });
     this.resetAddFlow();
     this.showAddEmployee = false;
     this.deleteDraftIfAny();
+    this.activeTab = 'employees';
   }
 
   private deleteDraftIfAny() {
-    const id = this.draftId ?? this.createdId ?? this.proForm.get('id')?.value;
+    const id = this.draftToken ?? this.createdId ?? this.proForm.get('id')?.value;
     if (!id) return;
 
     this.employeesService.deleteDraft(id).subscribe({
@@ -454,7 +478,7 @@ export class EmployeeComponent implements OnInit {
       error: (e) => console.error('Draft delete failed', e),
     });
 
-    this.draftId = null;
+    this.draftToken = null;
     this.draftEmail = null;
     this.createdId = null;
     this.plainAccessCode = null;
@@ -468,10 +492,12 @@ export class EmployeeComponent implements OnInit {
     this.selectedEnd = '';
     this.fileName = '';
   }
+
   onFileSelected(event: any): void {
     const file = event.target.files?.[0];
     if (!file) return;
     this.setSelectedFile(file);
+
   }
 
   onDragOver(event: DragEvent): void {
@@ -503,7 +529,7 @@ export class EmployeeComponent implements OnInit {
     }
 
     // optionnel: supprimer la photo sauvegardée pour ce draft
-    const id = this.createdId || this.draftId || this.proForm.get('id')?.value;
+    const id = this.createdId || this.draftToken || this.proForm.get('id')?.value;
     if (id) localStorage.removeItem(this.photoKey(id));
   }
   openDate(input: HTMLInputElement) {
@@ -534,7 +560,7 @@ export class EmployeeComponent implements OnInit {
     this.filePreviewUrl = this.previewObjectUrl;
 
     // si on a déjà un id (draft créé), on sauvegarde pour le tableau
-    const id = this.createdId || this.draftId || this.proForm.get('id')?.value;
+    const id = this.createdId || this.draftToken || this.proForm.get('id')?.value;
     if (id) this.persistPhotoForEmployee(id, file);
   }
   private persistPhotoForEmployee(id: string, file: File) {
@@ -567,20 +593,13 @@ export class EmployeeComponent implements OnInit {
     this.activeTabs = 'contracts';
   }
 
-  onCancelAdd(): void {
-    if (this.previewStep > 1) {
-      this.previewStep--;
-
-      // ✅ si on revient à l'étape email, réafficher accessCode
-      if (this.previewStep === 1 && this.draftId) {
-        this.proForm.patchValue({
-          id: this.draftId,
-          accessCode: this.draftAccessCode
-        });
-      }
-    } else {
-      this.resetAddFlow();
+  onCancelAdd() {
+    if (this.draftToken) {
+      this.employeesService.deleteDraft(this.draftToken).subscribe();
     }
+    this.resetAddFlow();
+    this.showAddEmployee = false;
+    this.activeTab = 'employees';
   }
   goNextFromContracts(): void {
     this.activeTabs = 'role';
@@ -591,8 +610,25 @@ export class EmployeeComponent implements OnInit {
   }
 
 
-  setRole(role: 'employee' | 'supervisor' | 'admin') {
+  setRole(role: 'employee' | 'supervisor' | 'admin' | 'hr') {
     this.selectedRole = role;
+
+    const lm = this.proForm.get('lineManagerId');
+
+    if (role === 'admin') {
+
+      lm?.setValue('');
+      lm?.clearValidators();
+      lm?.setErrors(null);
+      lm?.updateValueAndValidity({ emitEvent: false });
+    } else {
+
+      lm?.setValidators([Validators.required]);
+      lm?.updateValueAndValidity({ emitEvent: false });
+    }
+
+
+    this.refreshFilteredManagers();
   }
   cancelFromRole(): void {
     this.activeTabs = 'contracts';
@@ -671,10 +707,219 @@ export class EmployeeComponent implements OnInit {
     };
   }
   showStar(name: string): boolean {
+    if (this.mode === 'view') return false;
     const c = this.proForm.get(name);
     const valueEmpty = !String(c?.value ?? '').trim();      // vide ?
     const showError = !!c && c.hasError('required') && (c.touched || this.submitted);
     return valueEmpty && !showError;
+  }
+
+  mode: 'create' | 'view' | 'edit' = 'create';
+  viewPhotoUrl: string | null = null;
+  selectedEmployeeId: string | null = null;
+  private toDateInputValue(v: any): string {
+    if (!v) return '';
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  }
+
+  private applyRoleFromBackend(emp: any) {
+    const rawList = Array.isArray(emp?.roles) ? emp.roles : [];
+    const rawSingle = emp?.role ? [emp.role] : [];
+
+    const all = [...rawList, ...rawSingle]
+      .map((r: any) => String(r?.name ?? r).trim().toLowerCase())
+      .filter(Boolean);
+
+    if (all.includes('admin')) this.selectedRole = 'admin';
+    else if (all.includes('supervisor')) this.selectedRole = 'supervisor';
+    else if (all.includes('hr')) this.selectedRole = 'hr';
+    else this.selectedRole = 'employee';
+
+  }
+
+  onSeen(e: any) {
+    const id = e?.id;
+    if (!id) return;
+
+    this.mode = 'view';
+    this.selectedEmployeeId = id;
+
+    this.showAddEmployee = true;
+    this.activeTab = 'employees';
+
+    this.activeTabs = 'preview';
+    this.previewStep = 1;
+
+    // Photo depuis localStorage (ton système actuel)
+    this.viewPhotoUrl = this.getEmployeePhoto(id) || null;
+
+    this.employeesService.getById(id).subscribe({
+      next: (emp) => {
+
+        const toYmd = (v: any) => {
+          if (!v) return '';
+          if (typeof v === 'string') return v.slice(0, 10);
+          if (v instanceof Date) return v.toISOString().slice(0, 10);
+          return String(v).slice(0, 10);
+        };
+
+        const dob = toYmd(emp?.dob);
+        const contractStart = toYmd(emp?.contractStart);
+        const trialEnd = toYmd(emp?.trialEnd);
+
+        const state = emp?.state ?? '';
+        const department = emp?.department ?? '';
+
+
+        this.proForm.enable({ emitEvent: false });
+
+        this.applyRoleFromBackend(emp);
+        this.proForm.patchValue({
+          email: emp?.email ?? '',
+          firstName: emp?.firstName ?? '',
+          lastName: emp?.lastName ?? '',
+          mobile: emp?.mobile ?? '',
+          dob,
+          address: emp?.address ?? '',
+          maritalStatus: emp?.maritalStatus ?? '',
+          gender: emp?.gender ?? '',
+          nationality: emp?.nationality ?? '',
+          state,
+          city: emp?.city ?? '',
+          zip: emp?.zip ?? '',
+
+          bankAccountHolder: emp?.bankAccountHolder ?? '',
+          rib: emp?.rib ?? '',
+          cnss: emp?.cnss ?? '',
+          emergencyFirstName: emp?.emergencyFirstName ?? '',
+          emergencyLastName: emp?.emergencyLastName ?? '',
+          emergencyNumber: emp?.emergencyNumber ?? '',
+          relationship: emp?.relationship ?? '',
+
+          id: emp?.id ?? '',
+          department,
+          designation: emp?.designation ?? '',
+
+          contractType: emp?.contractType ?? '',
+          weeklyWork: emp?.weeklyWork ?? '',
+          contractStart,
+          trialEnd,
+          grossSalary: emp?.grossSalary ?? '',
+          grossHourlyRate: emp?.grossHourlyRate ?? '',
+
+          lineManagerId: emp?.lineManagerId ??  '',
+          accessCode: '',
+        }, { emitEvent: false });
+
+
+        if (state) {
+          this.lookups.getCities(state).subscribe({
+            next: (v) => {
+              this.cities = v ?? [];
+              this.proForm.get('city')?.setValue(emp?.city ?? '', { emitEvent: false });
+            },
+            error: () => { this.cities = []; }
+          });
+        } else {
+          this.cities = [];
+        }
+
+        // Designations
+        if (department) {
+          this.lookups.getDesignations(department).subscribe({
+            next: (v) => {
+              this.designations = v ?? [];
+              this.proForm.get('designation')?.setValue(emp?.designation ?? '', { emitEvent: false });
+            },
+            error: () => { this.designations = []; }
+          });
+        } else {
+          this.designations = [];
+        }
+
+
+        if (emp?.photoUrl) this.viewPhotoUrl = emp.photoUrl;
+
+
+        this.proForm.disable({ emitEvent: false });
+      },
+
+      error: (err) => this.handleApiError(err),
+    });
+  }
+
+
+  onDeleteEmployee(id: string) {
+    if (!id) return;
+
+    const ok = confirm('Are you sure you want to delete this employee?');
+    if (!ok) return;
+
+    this.employeesService.deleteEmployee(id).subscribe({
+      next: () => {
+
+
+        this.loadEmployees();
+      },
+      error: (err) => this.handleApiError(err),
+    });
+  }
+
+  shouldShowLineManager(): boolean {
+
+    return this.selectedRole !== 'admin';
+  }
+
+  managersAll: any[] = [];
+  filteredManagers: any[] = [];
+
+
+  private normalizeRoleList(emp: any): string[] {
+    const rawList = Array.isArray(emp?.roles) ? emp.roles : [];
+    const rawSingle = emp?.role ? [emp.role] : [];
+
+    return [...rawList, ...rawSingle]
+      .map((r: any) => String(r?.name ?? r).trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  private allowedManagerRoles(): string[] {
+
+    if (this.selectedRole === 'employee') return ['admin', 'supervisor', 'hr'];
+    if (this.selectedRole === 'hr') return ['admin', 'supervisor'];
+    if (this.selectedRole === 'supervisor') return ['admin', 'hr'];
+    return [];
+  }
+
+  private refreshManagersAll() {
+
+    this.managersAll = (this.employees ?? []).filter(e => {
+      const roles = this.normalizeRoleList(e);
+      return roles.some(r => ['admin', 'supervisor', 'hr'].includes(r));
+    });
+  }
+
+  private refreshFilteredManagers() {
+    const allowed = this.allowedManagerRoles();
+    this.filteredManagers = (this.managersAll ?? []).filter(m => {
+      const roles = this.normalizeRoleList(m);
+      return roles.some(r => allowed.includes(r));
+    });
+  }
+
+  private updateLineManagerValidator() {
+    const ctrl = this.proForm.get('lineManagerId');
+    if (!ctrl) return;
+
+    if (this.shouldShowLineManager()) {
+      ctrl.setValidators([Validators.required]);
+    } else {
+      ctrl.clearValidators();
+      ctrl.setValue('');
+    }
+    ctrl.updateValueAndValidity({ emitEvent: false });
   }
 
 }
