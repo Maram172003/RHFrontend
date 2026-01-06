@@ -221,7 +221,7 @@ export class EmployeeComponent implements OnInit {
         this.employees = rows ?? [];
         this.refreshManagersAll();
         this.refreshFilteredManagers();
-        this.goToPage(this.currentPage); // garde currentPage dans les limites
+        this.goToPage(this.currentPage);
       },
       error: (err) => console.error('load employees error', err),
     });
@@ -752,7 +752,7 @@ export class EmployeeComponent implements OnInit {
     this.activeTabs = 'preview';
     this.previewStep = 1;
 
-    // Photo depuis localStorage (ton système actuel)
+
     this.viewPhotoUrl = this.getEmployeePhoto(id) || null;
 
     this.employeesService.getById(id).subscribe({
@@ -776,6 +776,9 @@ export class EmployeeComponent implements OnInit {
         this.proForm.enable({ emitEvent: false });
 
         this.applyRoleFromBackend(emp);
+        this.refreshManagersAll();
+        this.refreshFilteredManagers();
+        this.updateLineManagerValidator();
         this.proForm.patchValue({
           email: emp?.email ?? '',
           firstName: emp?.firstName ?? '',
@@ -809,7 +812,7 @@ export class EmployeeComponent implements OnInit {
           grossSalary: emp?.grossSalary ?? '',
           grossHourlyRate: emp?.grossHourlyRate ?? '',
 
-          lineManagerId: emp?.lineManagerId ??  '',
+          lineManagerId: emp?.lineManagerId ?? '',
           accessCode: '',
         }, { emitEvent: false });
 
@@ -868,7 +871,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   shouldShowLineManager(): boolean {
-
+    if (this.mode === 'view') return true;
     return this.selectedRole !== 'admin';
   }
 
@@ -920,6 +923,203 @@ export class EmployeeComponent implements OnInit {
       ctrl.setValue('');
     }
     ctrl.updateValueAndValidity({ emitEvent: false });
+  }
+  onEdit(e: any) {
+    const id = e?.id;
+    if (!id) return;
+
+    this.mode = 'edit';
+    this.selectedEmployeeId = id;
+
+    this.showAddEmployee = true;
+    this.activeTab = 'employees';
+    this.activeTabs = 'preview';
+
+
+    this.previewStep = 1;
+
+
+    this.viewPhotoUrl = this.getEmployeePhoto(id) || null;
+
+    this.employeesService.getById(id).subscribe({
+      next: (emp) => {
+        const toYmd = (v: any) => (v ? String(v).slice(0, 10) : '');
+
+
+        this.proForm.enable({ emitEvent: false });
+
+
+        this.applyRoleFromBackend(emp);
+        this.originalEmailEdit = String(e?.email || '').trim().toLowerCase();
+        this.proForm.patchValue({
+          id: emp?.id ?? '',
+          email: emp?.email ?? '',
+          firstName: emp?.firstName ?? '',
+          lastName: emp?.lastName ?? '',
+          mobile: emp?.mobile ?? '',
+          dob: toYmd(emp?.dob),
+          address: emp?.address ?? '',
+          maritalStatus: emp?.maritalStatus ?? '',
+          gender: emp?.gender ?? '',
+          nationality: emp?.nationality ?? '',
+          state: emp?.state ?? '',
+          city: emp?.city ?? '',
+          zip: emp?.zip ?? '',
+          bankAccountHolder: emp?.bankAccountHolder ?? '',
+          rib: emp?.rib ?? '',
+          cnss: emp?.cnss ?? '',
+          emergencyFirstName: emp?.emergencyFirstName ?? '',
+          emergencyLastName: emp?.emergencyLastName ?? '',
+          emergencyNumber: emp?.emergencyNumber ?? '',
+          relationship: emp?.relationship ?? '',
+          department: emp?.department ?? '',
+          designation: emp?.designation ?? '',
+          contractType: emp?.contractType ?? '',
+          weeklyWork: emp?.weeklyWork ?? '',
+          contractStart: toYmd(emp?.contractStart),
+          trialEnd: toYmd(emp?.trialEnd),
+          grossSalary: emp?.grossSalary ?? '',
+          grossHourlyRate: emp?.grossHourlyRate ?? '',
+          lineManagerId: emp?.lineManagerId ?? '',
+
+        }, { emitEvent: false });
+
+
+        const state = emp?.state ?? '';
+        if (state) {
+          this.lookups.getCities(state).subscribe(v => {
+            this.cities = v ?? [];
+            this.proForm.get('city')?.setValue(emp?.city ?? '', { emitEvent: false });
+          });
+        }
+
+        const dep = emp?.department ?? '';
+        if (dep) {
+          this.lookups.getDesignations(dep).subscribe(v => {
+            this.designations = v ?? [];
+            this.proForm.get('designation')?.setValue(emp?.designation ?? '', { emitEvent: false });
+          });
+        }
+
+        // managers list (si tu filtres)
+        this.refreshManagersAll?.();
+        this.refreshFilteredManagers?.();
+      },
+      error: (err) => this.handleApiError(err),
+    });
+  }
+
+  onUpdateEmployee() {
+    this.apiError = null;
+    this.submitted = true;
+    this.proForm.markAllAsTouched();
+    if (this.proForm.invalid) return;
+
+    const id = this.selectedEmployeeId || this.proForm.get('id')?.value;
+    if (!id) return;
+
+    const v = this.proForm.getRawValue();
+
+    const detailsPayload: any = {
+      email: v.email?.trim(),
+      firstName: v.firstName?.trim(),
+      lastName: v.lastName?.trim(),
+      mobile: v.mobile?.trim(),
+      dob: v.dob || undefined,
+      address: v.address?.trim(),
+      state: v.state || undefined,
+      city: v.city || undefined,
+      zip: v.zip?.trim(),
+      maritalStatus: v.maritalStatus || undefined,
+      gender: v.gender || undefined,
+      nationality: v.nationality || undefined,
+      bankAccountHolder: v.bankAccountHolder?.trim(),
+      rib: v.rib?.trim(),
+      cnss: v.cnss?.trim(),
+      emergencyFirstName: v.emergencyFirstName?.trim() || undefined,
+      emergencyLastName: v.emergencyLastName?.trim() || undefined,
+      emergencyNumber: v.emergencyNumber?.trim() || undefined,
+      relationship: v.relationship || undefined,
+      department: v.department || undefined,
+      designation: v.designation || undefined,
+      contractType: v.contractType || undefined,
+      weeklyWork: v.weeklyWork || undefined,
+      contractStart: v.contractStart || undefined,
+      trialEnd: v.trialEnd || undefined,
+      grossSalary: v.grossSalary || undefined,
+      grossHourlyRate: v.grossHourlyRate || undefined,
+      lineManagerId: v.lineManagerId || undefined,
+    };
+
+    const roles: Role[] = [
+      this.selectedRole === 'admin' ? Role.Admin :
+        this.selectedRole === 'supervisor' ? Role.Supervisor :
+          this.selectedRole === 'hr' ? Role.Hr :
+            Role.Employee
+    ];
+    this.employeesService.saveDetails(id, detailsPayload).pipe(
+      switchMap(() => this.employeesService.updateRoles(id, roles))
+    ).subscribe({
+      next: () => {
+        this.showAddEmployee = false;
+        this.resetAddFlow();
+        this.loadEmployees();
+      },
+      error: (err) => this.handleApiError(err),
+    });
+  }
+
+  onNextEmailStep() {
+    // view => simple navigation
+    if (this.mode === 'view') {
+      this.nextPreview();
+      return;
+    }
+
+    // create => ton flow draft actuel
+    if (this.mode === 'create') {
+      this.onPrimaryAction();
+      return;
+    }
+
+    // edit => check email (si changé)
+    this.checkEmailBeforeNextEdit();
+  }
+  originalEmailEdit: string | null = null;
+
+  private checkEmailBeforeNextEdit() {
+    this.apiError = null;
+    this.submitted = true;
+
+    const emailCtrl = this.proForm.get('email');
+    emailCtrl?.markAsTouched();
+    emailCtrl?.updateValueAndValidity();
+
+    if (!emailCtrl || emailCtrl.invalid) return;
+
+    const email = String(emailCtrl.value || '').trim().toLowerCase();
+    const currentId = this.selectedEmployeeId || this.proForm.get('id')?.value;
+
+    // ✅ si l’email n’a pas changé => laisser passer
+    if (this.originalEmailEdit && email === this.originalEmailEdit) {
+      this.nextPreview();
+      return;
+    }
+
+    const exists = (this.employees || []).some(emp =>
+      String(emp?.email || '').trim().toLowerCase() === email &&
+      String(emp?.id || '') !== String(currentId || '')
+    );
+
+    if (exists) {
+      emailCtrl.setErrors({ ...(emailCtrl.errors || {}), emailTaken: true });
+      emailCtrl.markAsTouched();
+      emailCtrl.updateValueAndValidity();
+      return;
+    }
+
+
+    this.nextPreview();
   }
 
 }

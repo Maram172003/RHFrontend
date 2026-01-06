@@ -84,7 +84,7 @@
                                     <div class="actions">
                                         <button class="action-btn" (click)="onSeen(e)"><img src="assets/images/see.svg"
                                                 alt=""></button>
-                                        <button class="action-btn" ><img src="assets/images/edit.svg" alt=""></button>
+                                        <button class="action-btn" (click)="onEdit(e); $event.stopPropagation()"><img src="assets/images/edit.svg" alt=""></button>
                                         <button class="action-btn"
                                             (click)="onDeleteEmployee(e.id); $event.stopPropagation()"><img
                                                 src="assets/images/delete.svg" alt=""></button>
@@ -426,7 +426,7 @@
                             <footer class="card__footer">
                                 <button type="button" class="btn btn--ghost" (click)="onCancelAdd()">Cancel</button>
                                 <button type="button" class="btn btn--primary"
-                                    (click)="mode === 'view' ? nextPreview() : onPrimaryAction()">Next</button>
+                                    (click)="onNextEmailStep()">Next</button>
                             </footer>
 
 
@@ -569,7 +569,7 @@
                                     </header>
 
                                     <div class="fields">
-                                        <div class="field">
+                                        <div *ngIf="mode === 'view'" class="field">
                                             <input id="id" type="text" formControlName="id" placeholder="Employee Id"
                                                 readonly />
                                         </div>
@@ -607,7 +607,7 @@
 
                                         </div>
 
-                                        <div class="field" *ngIf="mode !== 'view'">
+                                        <div class="field" *ngIf="mode === 'create'">
                                             <input id="accessCode" type="text" formControlName="accessCode"
                                                 placeholder="Access Code" readonly />
                                         </div>
@@ -816,11 +816,12 @@
 
                     </div>
                     <div class="field-wrap">
-                        <div  *ngIf="shouldShowLineManager()"  class="field select-field">
-                            
+                        <div *ngIf="shouldShowLineManager()" class="field select-field">
+
                             <span class="req-star" *ngIf="showStar('lineManagerId')">*</span>
-                            <select id="lineManagerId" aria-label="Line Manager" required formControlName="lineManagerId"
-                                [disabled]="mode==='view'" [class.placeholder]="!proForm.get('lineManagerId')?.value">
+                            <select id="lineManagerId" aria-label="Line Manager" required
+                                formControlName="lineManagerId" [disabled]="mode==='view'"
+                                [class.placeholder]="!proForm.get('lineManagerId')?.value">
 
                                 <option value="" disabled selected>Line Manager</option>
 
@@ -842,7 +843,7 @@
                         <button type="button" class="btn btn--ghost" (click)="cancelFromRole()">Cancel</button>
 
                         <button type="button" class="btn btn--primary" *ngIf="mode !== 'view'"
-                            (click)="onSubmitAll()">Submit</button>
+                            (click)="mode === 'edit' ? onUpdateEmployee() : onSubmitAll()">Submit</button>
                     </footer>
 
 
