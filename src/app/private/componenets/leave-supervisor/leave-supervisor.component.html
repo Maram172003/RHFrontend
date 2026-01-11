@@ -2,7 +2,7 @@
 
   <!-- Sidebar -->
 
-  <app-sidebar></app-sidebar>
+  <app-sidebarsuper></app-sidebarsuper>
 
   <!-- Contenu -->
   <section class="content-area">
@@ -14,7 +14,7 @@
       <div class="tabs">
         <button class="tab" [class.is-active]="activeTab==='demands'" (click)="selectTab('demands')">Demands</button>
         <button class="tab" [class.is-active]="activeTab==='credit'" (click)="selectTab('credit')">Credit</button>
-        <button class="tab" [class.is-active]="activeTab==='team-demand'" (click)="selectTab('team-demand')">Team
+        <button class="tab" *ngIf="!authService.isEmployee()" [class.is-active]="activeTab==='team-demand'" (click)="selectTab('team-demand')">Team
           Demands</button>
 
       </div>
@@ -26,7 +26,7 @@
     </div>
 
     <!-- ===== Carte TABLEAU dans un cadre ===== -->
-    <div *ngIf="activeTab=='demands'">
+    <div *ngIf="!authService.isAdmin() && activeTab==='demands'">
       <div class="card ">
         <!-- Filtres (en-tête du cadre) -->
         <div class="filters">
@@ -126,7 +126,7 @@
 
     </div>
     <!-- CREDIT TAB -->
-    <div *ngIf="activeTab==='credit'">
+    <div *ngIf="!authService.isAdmin() && activeTab==='credit'">
       <div class="card credit">
         <div class="kpi">
           <div class="kpi__heading">
@@ -328,4 +328,5 @@
       <button class="btn primary" (click)="closeOverlay()">Apply</button>
     </div>
   </div>
+
 </div>

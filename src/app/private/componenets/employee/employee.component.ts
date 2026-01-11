@@ -249,9 +249,11 @@ export class EmployeeComponent implements OnInit {
 
       emailCtrl.markAsTouched();
       emailCtrl.markAsDirty();
+      emailCtrl.updateValueAndValidity({ emitEvent: false });
+      this.submitted = true;
 
 
-
+      console.log('EXISTS DUPLICATE => setting emailTaken error');
       return;
     }
 
@@ -1114,7 +1116,7 @@ export class EmployeeComponent implements OnInit {
     if (exists) {
       emailCtrl.setErrors({ ...(emailCtrl.errors || {}), emailTaken: true });
       emailCtrl.markAsTouched();
-      emailCtrl.updateValueAndValidity();
+      this.submitted = true;
       return;
     }
 

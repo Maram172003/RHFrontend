@@ -14,14 +14,14 @@ export class LoginComponent implements OnInit {
   error = '';
   form!: FormGroup;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) { }
 
   ngOnInit(): void {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
 
       accessCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
-     
+
     });
   }
 
@@ -34,14 +34,21 @@ export class LoginComponent implements OnInit {
 
     this.auth.login(email, accessCode).subscribe({
       next: (res) => {
-   
+
         if (res?.token) localStorage.setItem('token', res.token);
 
-      
+        const role = this.auth.getMainRole();
+
+        if (role === 'hr' || role === 'admin') {
+          this.router.navigateByUrl('/dashboard-admin');
+        } else {
+        
+          this.router.navigateByUrl('/dashboard-super');
+        }
+
+       
         if (res?.mustReset) {
           this.router.navigateByUrl('/reset-access-code');
-        } else {
-          this.router.navigateByUrl('/dashboard-employee');
         }
       },
       error: (err) => {
@@ -52,4 +59,7 @@ export class LoginComponent implements OnInit {
       complete: () => (this.loading = false),
     });
   }
+
+
+
 }

@@ -1,26 +1,32 @@
-  <aside class="sidebar">
-    <div class="sidebar-content">
-      <nav class="nav-menu">
-        <a href="#" class="nav-item "routerLink="/dashboard-super" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-          <img src="assets/images/img_huge_icon_inter.svg" alt="Dashboard"><span>Dashboard</span>
-        </a>
-        <a href="#" class="nav-item"routerLink="/pointing" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-          <img src="assets/images/img_pointaga_1.png" alt="Pointing"><span>Pointing</span>
-        </a>
-        <a href="#" class="nav-item"routerLink="/documents" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-          <img src="assets/images/img_huge_icon_notes.svg" alt="Documents"><span>Documents</span>
-        </a>
-        <a href="#" class="nav-item"routerLink="/projects" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-          <img src="assets/images/project-icon-png-16.jpg" alt="Projects"><span>Projects</span>
-        </a>
-        <a href="#" class="nav-item"routerLink="/leave-super" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-          <img src="assets/images/img_resource_absence.svg" alt="Leave"><span>Leave</span>
-        </a>
-        <a href="#"class="nav-item"routerLink="/settings" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-          <img src="assets/images/img_huge_icon_inter_gray_900.svg" alt="Settings"><span>Settings</span>
-        </a>
-      </nav>
+<aside class="sidebar">
+  <div class="sidebar-content">
+    <nav class="nav-menu">
+      <a class="nav-item" routerLink="/dashboard-super" routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }">
+        <img src="assets/images/img_huge_icon_inter.svg" alt="Dashboard"><span>Dashboard</span>
+      </a>
 
-      <img class="logo" src="assets/images/img_22222_1.png" alt="TeamDev">
-    </div>
-  </aside>
+      <a class="nav-item" routerLink="/pointing" routerLinkActive="active">
+        <img src="assets/images/img_pointaga_1.png" alt="Pointing"><span>Pointing</span>
+      </a>
+
+      <a class="nav-item" routerLink="/documents" routerLinkActive="active">
+        <img src="assets/images/img_huge_icon_notes.svg" alt="Documents"><span>Documents</span>
+      </a>
+
+      <a class="nav-item" routerLink="/projects" routerLinkActive="active">
+        <img src="assets/images/project-icon-png-16.jpg" alt="Projects"><span>Projects</span>
+      </a>
+
+      <a class="nav-item" routerLink="/leave-super" routerLinkActive="active">
+        <img src="assets/images/img_resource_absence.svg" alt="Leave"><span>Leave</span>
+      </a>
+      <a class="nav-item" routerLink="/settings" routerLinkActive="active">
+        <img src="assets/images/img_huge_icon_inter_gray_900.svg" alt="Settings"><span>Settings</span>
+      </a>
+
+    </nav>
+
+    <img class="logo" src="assets/images/img_22222_1.png" alt="TeamDev">
+  </div>
+</aside>

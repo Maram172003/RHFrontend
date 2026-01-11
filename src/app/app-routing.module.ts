@@ -15,39 +15,24 @@ import { ResetAccessCodeComponent } from './auth/components/reset-access-code/re
 
 
 const routes: Routes = [
- 
-  
+
+
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  
 
   { path: 'login', component: LoginComponent },
 
+  { path: 'reset-access-code', component: ResetAccessCodeComponent },
 
   { path: 'dashboard-employee', component: DashboardEmployeeComponent },
-  { path: 'dashboard-admin', component: DashboardAdminstrationComponent },
+  { path: 'leave-employee', component: EmployeeLeaveComponent },
+
   { path: 'dashboard-super', component: DashboardSupervisorComponent },
+  { path: 'leave-super', component: LeaveSupervisorComponent },
 
-  { path: 'reset-access-code', component: ResetAccessCodeComponent },
-  
-
-  {
-    path: 'leave',
-    children: [
-      { path: '', redirectTo: 'demands', pathMatch: 'full' },   
-      { path: 'demands', component: EmployeeLeaveComponent },
-      { path: 'credit', component: EmployeeLeaveComponent },
-      { path: 'team', component: EmployeeLeaveComponent },
-    ],
-  },
-
-
+  { path: 'dashboard-admin', component: DashboardAdminstrationComponent },
+  { path: 'leave-admin', component: LeaveAdminstrationComponent },
   { path: 'employees', component: EmployeeComponent },
 
-
-  { path: 'leave-admin', component: LeaveAdminstrationComponent },
-
-
-  { path: 'leave-super', component: LeaveSupervisorComponent },
 
 
   { path: '**', redirectTo: 'login' }
@@ -59,4 +44,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
 })
-export class AppRoutingModule {}
+export class AppRoutingModule { }

@@ -823,7 +823,7 @@
                                 formControlName="lineManagerId" [disabled]="mode==='view'"
                                 [class.placeholder]="!proForm.get('lineManagerId')?.value">
 
-                                <option value="" disabled selected>Line Manager</option>
+                                <option value="" disabled hidden>Line Manager</option>
 
                                 <option *ngFor="let m of filteredManagers" [value]="m.id">
                                     {{ m.firstName }} {{ m.lastName }} ({{ m.email }})

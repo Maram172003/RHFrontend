@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-leave-adminstration',
@@ -7,9 +8,80 @@ import { Component } from '@angular/core';
   styleUrl: './leave-adminstration.component.css'
 })
 export class LeaveAdminstrationComponent {
- activeTab: 'team-demand'  = 'team-demand';
+  constructor(public authService: AuthService) { }
 
-  selectTab(tab: 'team-demand' ) {
+
+
+  showOverlay = false;
+
+  selectedStart: 'full' | 'morning' | 'afternoon' | null = null;
+  selectedEnd: 'full' | 'morning' | null = null;
+
+  openOverlay() {
+    this.showOverlay = true;
+
+    this.selectedStart = null;
+    this.selectedEnd = null;
+  }
+
+  closeOverlay() {
+    this.showOverlay = false;
+  }
+
+  file?: File | null = null;
+  fileName: string | null = null;
+
+  private setFile(f: File) {
+    this.file = f;
+    this.fileName = f.name;
+  }
+
+  clearFile(ev?: Event) {
+    ev?.stopPropagation(); // évite d’ouvrir le sélecteur si la box est cliquable
+    this.file = null;
+    this.fileName = null;
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.setFile(input.files[0]);
+      input.value = ''; // permet de re-sélectionner le même fichier plus tard
+    }
+  }
+
+  onDrop(ev: DragEvent) {
+    ev.preventDefault();
+    (ev.currentTarget as HTMLElement).classList.remove('is-dragover');
+    const files = ev.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.setFile(files[0]);
+    }
+  }
+
+  onDragOver(ev: DragEvent) {
+    ev.preventDefault();
+    (ev.currentTarget as HTMLElement).classList.add('is-dragover');
+  }
+
+  onDragLeave(ev: DragEvent) {
+    (ev.currentTarget as HTMLElement).classList.remove('is-dragover');
+  }
+
+  activeFilter: 'onhold' | 'valid' | 'canceled' | 'all' | 'category' | null = null;
+  setFilter(f: typeof this.activeFilter) { this.activeFilter = (this.activeFilter === f ? null : f); }
+
+
+  activeTab: 'demands' | 'credit' | 'team-demand' = 'demands';
+
+  selectTab(tab: 'demands' | 'credit' | 'team-demand') {
+    if (this.authService.isAdmin() && (tab === 'demands' || tab === 'credit')) return;
     this.activeTab = tab;
   }
+  ngOnInit() {
+    this.activeTab = this.authService.isAdmin() ? 'team-demand' : 'demands';
+  }
+
+  availableLeaves = 24;
+  lastUpdated: Date = new Date();
 }

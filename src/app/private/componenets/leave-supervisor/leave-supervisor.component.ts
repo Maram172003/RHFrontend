@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-leave-supervisor',
@@ -7,65 +8,68 @@ import { Component } from '@angular/core';
   styleUrl: './leave-supervisor.component.css'
 })
 export class LeaveSupervisorComponent {
+    constructor(public authService: AuthService) { }
+
+
 
   showOverlay = false;
 
-selectedStart: 'full'|'morning'|'afternoon'|null = null;
-selectedEnd: 'full'|'morning'|null = null;
+  selectedStart: 'full' | 'morning' | 'afternoon' | null = null;
+  selectedEnd: 'full' | 'morning' | null = null;
 
-openOverlay(){
-  this.showOverlay = true;
- 
-  this.selectedStart = null;
-  this.selectedEnd = null;
-}
+  openOverlay() {
+    this.showOverlay = true;
 
-closeOverlay(){
-  this.showOverlay = false;
-}
-
-file?: File | null = null;
-fileName: string | null = null;
-
-private setFile(f: File){
-  this.file = f;
-  this.fileName = f.name;
-}
-
-clearFile(ev?: Event){
-  ev?.stopPropagation(); // évite d’ouvrir le sélecteur si la box est cliquable
-  this.file = null;
-  this.fileName = null;
-}
-
-onFileSelected(event: Event) {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
-    this.setFile(input.files[0]);
-    input.value = ''; // permet de re-sélectionner le même fichier plus tard
+    this.selectedStart = null;
+    this.selectedEnd = null;
   }
-}
 
-onDrop(ev: DragEvent) {
-  ev.preventDefault();
-  (ev.currentTarget as HTMLElement).classList.remove('is-dragover');
-  const files = ev.dataTransfer?.files;
-  if (files && files.length > 0) {
-    this.setFile(files[0]);
+  closeOverlay() {
+    this.showOverlay = false;
   }
-}
 
-onDragOver(ev: DragEvent) {
-  ev.preventDefault();
-  (ev.currentTarget as HTMLElement).classList.add('is-dragover');
-}
+  file?: File | null = null;
+  fileName: string | null = null;
 
-onDragLeave(ev: DragEvent){
-  (ev.currentTarget as HTMLElement).classList.remove('is-dragover');
-}
+  private setFile(f: File) {
+    this.file = f;
+    this.fileName = f.name;
+  }
 
-activeFilter: 'onhold'|'valid'|'canceled'|'all'|'category'|null = null;
-setFilter(f: typeof this.activeFilter){ this.activeFilter = (this.activeFilter===f ? null : f); }
+  clearFile(ev?: Event) {
+    ev?.stopPropagation(); // évite d’ouvrir le sélecteur si la box est cliquable
+    this.file = null;
+    this.fileName = null;
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.setFile(input.files[0]);
+      input.value = ''; // permet de re-sélectionner le même fichier plus tard
+    }
+  }
+
+  onDrop(ev: DragEvent) {
+    ev.preventDefault();
+    (ev.currentTarget as HTMLElement).classList.remove('is-dragover');
+    const files = ev.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.setFile(files[0]);
+    }
+  }
+
+  onDragOver(ev: DragEvent) {
+    ev.preventDefault();
+    (ev.currentTarget as HTMLElement).classList.add('is-dragover');
+  }
+
+  onDragLeave(ev: DragEvent) {
+    (ev.currentTarget as HTMLElement).classList.remove('is-dragover');
+  }
+
+  activeFilter: 'onhold' | 'valid' | 'canceled' | 'all' | 'category' | null = null;
+  setFilter(f: typeof this.activeFilter) { this.activeFilter = (this.activeFilter === f ? null : f); }
 
 
   activeTab: 'demands' | 'credit' | 'team-demand' = 'demands';
@@ -73,7 +77,7 @@ setFilter(f: typeof this.activeFilter){ this.activeFilter = (this.activeFilter==
   selectTab(tab: 'demands' | 'credit' | 'team-demand') {
     this.activeTab = tab;
   }
-    ngOnInit() {
+  ngOnInit() {
     this.activeTab = 'demands';
   }
 

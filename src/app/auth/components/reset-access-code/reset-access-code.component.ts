@@ -11,16 +11,16 @@ import { ResetAccessCodeResponse } from '../../types/reset-access-code-response'
   styleUrl: './reset-access-code.component.css'
 })
 export class ResetAccessCodeComponent {
-   loading = false;
+  loading = false;
   error = '';
   success = '';
 
-  form!: FormGroup; 
+  form!: FormGroup;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) { }
 
   ngOnInit(): void {
-    
+
     this.form = this.fb.group({
       currentAccessCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
       newAccessCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
@@ -53,8 +53,18 @@ export class ResetAccessCodeComponent {
         if (res.token) localStorage.setItem('token', res.token);
         localStorage.setItem('mustReset', 'false');
 
+        const token = res.token || localStorage.getItem('token') || '';
+        const roles = this.getRolesFromToken(token);
+
         this.success = 'Code réinitialisé avec succès.';
-        setTimeout(() => this.router.navigateByUrl('/dashboard-employee'), 500);
+
+
+        if (roles.includes('admin') || roles.includes('hr')) {
+          this.router.navigateByUrl('/dashboard-admin');
+        } else {
+
+          this.router.navigateByUrl('/dashboard-super');
+        }
       },
       error: (err) => {
         if (err?.status === 401) this.error = 'Code actuel incorrect.';
@@ -63,6 +73,26 @@ export class ResetAccessCodeComponent {
       },
       complete: () => (this.loading = false),
     });
+  }
+
+  private getRolesFromToken(token: string): string[] {
+    const payload = this.getPayloadFromToken(token);
+    const raw = payload?.roles ?? [];
+    const list = Array.isArray(raw) ? raw : [raw];
+
+    return list
+      .map((r: any) => String(r?.name ?? r).toLowerCase())
+      .filter(Boolean);
+  }
+
+  private getPayloadFromToken(token: string): any | null {
+    try {
+      const payloadPart = token.split('.')[1];
+      const json = atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
   }
 
 }
