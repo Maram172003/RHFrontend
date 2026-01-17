@@ -49,6 +49,6 @@ export class AuthService {
   }
 
   isEmployee(): boolean { return this.getMainRole() === 'employee'; }
-  isSupervisor(): boolean { return this.getMainRole() === 'supervisor'; }
+ 
   isAdmin(): boolean { return this.getMainRole() === 'admin'; }
 }

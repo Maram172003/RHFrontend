@@ -39,10 +39,10 @@ export class EmployeesService {
     );
   }
 
-  submitDraft(body: { draftToken: string; details: any; roles: Role[] }) {
+  submitDraft(fd: FormData) {
     return this.http.post<{ employee: any; plainAccessCode?: string }>(
       `${this.base}/employees/submit`,
-      body
+      fd
     );
   }
 
@@ -56,22 +56,9 @@ export class EmployeesService {
   deleteEmployee(id: string) {
     return this.http.delete<void>(`${this.base}/employees/${id}`);
   }
+  submitDraftFormData(formData: FormData) {
+    return this.http.post(`${this.base}/employees/submit`, formData);
+  }
 
-  
-  //  
-  /*
-  
-    updateProfile(id: string, body: any) {
-      return this.http.patch<{ ok: boolean; employee: any }>(`${this.base}/employees/${id}/profile`, body);
-    }
-  
-    markSeen(id: string) {
-      return this.http.patch<{ ok: boolean }>(`${this.base}/employees/${id}/seen`, {});
-    }
-  
-    delete(id: string) {
-      return this.http.delete<{ ok: boolean }>(`${this.base}/employees/${id}`);
-    }
-  
-  */
+
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { EmployeesService } from '../../services/employees.service';
 
@@ -39,7 +39,7 @@ export class EmployeeComponent implements OnInit {
   draftAccessCode: string | null = null;
   proForm!: FormGroup;
 
-  constructor(private fb: FormBuilder, private employeesService: EmployeesService, private lookups: LookupsService,) { }
+  constructor(private fb: FormBuilder, private employeesService: EmployeesService, private lookups: LookupsService, private cdRef: ChangeDetectorRef,) { }
 
   states: string[] = [];
   cities: string[] = [];
@@ -195,9 +195,7 @@ export class EmployeeComponent implements OnInit {
         this.draftAccessCode = res.plainAccessCode;
 
         this.proForm.patchValue({ id: this.draftToken, accessCode: this.draftAccessCode });
-        if (this.selectedFile && this.draftToken) {
-          this.persistPhotoForEmployee(this.draftToken, this.selectedFile);
-        }
+
         this.previewStep = 2;
 
 
@@ -345,23 +343,21 @@ export class EmployeeComponent implements OnInit {
     ];
     console.log('SUBMIT draftToken=', this.draftToken);
 
-    this.employeesService.submitDraft({
-      draftToken: this.draftToken,
-      details: detailsPayload,
-      roles
-    }).subscribe({
+    const fd = new FormData();
+    fd.append('draftToken', this.draftToken);
+    fd.append('details', JSON.stringify(detailsPayload));
+    fd.append('roles', JSON.stringify(roles));
+
+    if (this.selectedFile) {
+      fd.append('photo', this.selectedFile); // ✅ le nom doit être "photo"
+    }
+
+    this.employeesService.submitDraft(fd).subscribe({
       next: (res: any) => {
-        const newId = res?.employee?.id;
-        const draftId = this.draftToken;
 
 
-        if (newId && draftId) {
-          const draftPhoto = localStorage.getItem(`employee_photo_${draftId}`);
-          if (draftPhoto) {
-            localStorage.setItem(`employee_photo_${newId}`, draftPhoto);
-            localStorage.removeItem(`employee_photo_${draftId}`);
-          }
-        }
+
+
         this.draftToken = null;
         this.draftEmail = null;
         this.draftAccessCode = null;
@@ -373,6 +369,9 @@ export class EmployeeComponent implements OnInit {
       error: (err) => this.handleApiError(err),
     });
   }
+
+
+
   private resetAddFlow() {
     this.submitted = false;
 
@@ -444,6 +443,7 @@ export class EmployeeComponent implements OnInit {
 
   selectTab(tab: 'preview' | 'contracts' | 'role') {
     this.activeTabs = tab;
+    this.cdRef.detectChanges();
   }
 
   openAddEmployee(): void {
@@ -530,9 +530,7 @@ export class EmployeeComponent implements OnInit {
       this.previewObjectUrl = null;
     }
 
-    // optionnel: supprimer la photo sauvegardée pour ce draft
-    const id = this.createdId || this.draftToken || this.proForm.get('id')?.value;
-    if (id) localStorage.removeItem(this.photoKey(id));
+
   }
   openDate(input: HTMLInputElement) {
     if ((input as any).showPicker) {
@@ -543,40 +541,18 @@ export class EmployeeComponent implements OnInit {
     }
   }
   private previewObjectUrl: string | null = null;
-  private photoKey(id: string) {
-    return `employee_photo_${id}`;
-  }
 
-  getEmployeePhoto(id: string): string | null {
-    try { return localStorage.getItem(this.photoKey(id)); }
-    catch { return null; }
-  }
 
   private setSelectedFile(file: File) {
     this.selectedFile = file;
     this.fileName = file.name;
 
-    // preview immédiat (rapide)
     if (this.previewObjectUrl) URL.revokeObjectURL(this.previewObjectUrl);
     this.previewObjectUrl = URL.createObjectURL(file);
-    this.filePreviewUrl = this.previewObjectUrl;
 
-    // si on a déjà un id (draft créé), on sauvegarde pour le tableau
-    const id = this.createdId || this.draftToken || this.proForm.get('id')?.value;
-    if (id) this.persistPhotoForEmployee(id, file);
+    this.filePreviewUrl = this.previewObjectUrl;
   }
-  private persistPhotoForEmployee(id: string, file: File) {
-    // Sauvegarde en base64 dans localStorage
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        localStorage.setItem(this.photoKey(id), String(reader.result));
-      } catch (e) {
-        console.warn('localStorage full, photo not saved', e);
-      }
-    };
-    reader.readAsDataURL(file);
-  }
+
 
 
 
@@ -631,6 +607,8 @@ export class EmployeeComponent implements OnInit {
 
 
     this.refreshFilteredManagers();
+
+    this.cdRef.detectChanges();
   }
   cancelFromRole(): void {
     this.activeTabs = 'contracts';
@@ -740,10 +718,12 @@ export class EmployeeComponent implements OnInit {
     else this.selectedRole = 'employee';
 
   }
-
+  selectedEmployee: any = null;
   onSeen(e: any) {
+    this.selectedEmployee = e;
     const id = e?.id;
     if (!id) return;
+    this.selectedEmployee = e;
 
     this.mode = 'view';
     this.selectedEmployeeId = id;
@@ -755,7 +735,7 @@ export class EmployeeComponent implements OnInit {
     this.previewStep = 1;
 
 
-    this.viewPhotoUrl = this.getEmployeePhoto(id) || null;
+
 
     this.employeesService.getById(id).subscribe({
       next: (emp) => {
@@ -845,7 +825,11 @@ export class EmployeeComponent implements OnInit {
         }
 
 
-        if (emp?.photoUrl) this.viewPhotoUrl = emp.photoUrl;
+        if (emp?.photoUrl) {
+          this.viewPhotoUrl = this.toPhotoSrc(emp.photoUrl); 
+        } else {
+          this.viewPhotoUrl = null;
+        }
 
 
         this.proForm.disable({ emitEvent: false });
@@ -941,7 +925,7 @@ export class EmployeeComponent implements OnInit {
     this.previewStep = 1;
 
 
-    this.viewPhotoUrl = this.getEmployeePhoto(id) || null;
+
 
     this.employeesService.getById(id).subscribe({
       next: (emp) => {
@@ -1124,4 +1108,15 @@ export class EmployeeComponent implements OnInit {
     this.nextPreview();
   }
 
+  toPhotoSrc(photoUrl?: string | null): string | null {
+    if (!photoUrl) return null;
+
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) return photoUrl;
+
+    if (photoUrl.startsWith('/uploads')) {
+      return `http://localhost:4000${photoUrl}`;
+    }
+
+    return photoUrl;
+  }
 }

@@ -5,7 +5,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
 
-import { EmployeeLeaveComponent } from './private/componenets/employee-leave/employee-leave.component';
+
 import { NavbarComponent } from './layout/navbar/navbar.component';
 import { SidebarComponent } from './layout/sidebar/sidebar.component';
 import { DashboardEmployeeComponent } from './private/componenets/dashboard-employee/dashboard-employee.component';
@@ -28,7 +28,7 @@ import { JwtInterceptor } from './auth/services/jwt.interceptor';
 @NgModule({
   declarations: [
     AppComponent,
-    EmployeeLeaveComponent,
+   
     DashboardAdminstrationComponent,
     NavbarComponent,
     SidebarComponent,

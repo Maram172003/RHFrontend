@@ -12,9 +12,11 @@
     <!-- Tabs -->
     <div class="tabs-row">
       <div class="tabs">
-        <button class="tab" *ngIf="!authService.isAdmin()" [class.is-active]="activeTab==='demands'" (click)="selectTab('demands')">Demands</button>
-        <button class="tab" *ngIf="!authService.isAdmin()" [class.is-active]="activeTab==='credit'" (click)="selectTab('credit')">Credit</button>
-        <button class="tab"  [class.is-active]="activeTab==='team-demand'" (click)="selectTab('team-demand')">Team
+        <button class="tab" *ngIf="!authService.isAdmin()" [class.is-active]="activeTab==='demands'"
+          (click)="selectTab('demands')">Demands</button>
+        <button class="tab" *ngIf="!authService.isAdmin()" [class.is-active]="activeTab==='credit'"
+          (click)="selectTab('credit')">Credit</button>
+        <button class="tab" [class.is-active]="activeTab==='team-demand'" (click)="selectTab('team-demand')">Team
           Demands</button>
 
       </div>
@@ -25,10 +27,9 @@
       </button>
     </div>
 
-    <!-- ===== Carte TABLEAU dans un cadre ===== -->
-    <div *ngIf="activeTab=='demands'">
+    <div *ngIf="!authService.isAdmin() && activeTab==='demands'">
       <div class="card ">
-        <!-- Filtres (en-tête du cadre) -->
+
         <div class="filters">
           <div class="left-buttons">
             <img src="assets/images/img_funnelsimple.svg" alt="">
@@ -67,7 +68,7 @@
 
         </div>
 
-        <!-- Corps du tableau -->
+
         <div class="table-scroll">
           <table class="table">
             <thead>
@@ -76,57 +77,71 @@
                 <th>Period</th>
                 <th>Duration</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>paid leave</td>
-                <td>08 sept 2025–21 sept 2025</td>
-                <td>14 days</td>
-                <td><span class="badge ok">Approved</span></td>
+              <tr *ngFor="let r of myLeaves">
+                <td>{{ r.leaveType === 'other' ? ('Other - ' + (r.otherReason || '')) : r.leaveType }}</td>
+                <td>{{ r.startDate }} – {{ r.endDate }}</td>
+                <td>{{ r.duration }} jours</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                          ok: r.status === 'approved',
+                          bad: r.status === 'refused',
+                          pending: r.status === 'pending'
+                         }">
+                    {{ r.status }}
+                  </span>
+                </td>
+                <td class="actions">
+
+                  <button class="action-btn" (click)="onView(r)" title="View">
+                    <img src="assets/images/see.svg" alt="">
+                  </button>
+
+
+                  <button class="action-btn" (click)="onEdit(r)" title="Edit" [disabled]="r.status !== 'pending'"
+                    [class.disabled]="r.status !== 'pending'">
+                    <img src="assets/images/edit.svg" alt="">
+                  </button>
+
+
+                  <button class="action-btn" (click)="onDelete(r)" title="Delete" [disabled]="r.status !== 'pending'"
+                    [class.disabled]="r.status !== 'pending'">
+                    <img src="assets/images/delete.svg" alt="">
+                  </button>
+                </td>
               </tr>
-              <tr>
-                <td>paid leave</td>
-                <td>08 jan 2025–21 oct 2025</td>
-                <td>02 days</td>
-                <td><span class="badge ok">Approved</span></td>
-              </tr>
-              <tr>
-                <td>Remote</td>
-                <td>01 jan 2025–02 oct 2025</td>
-                <td>15 days</td>
-                <td><span class="badge ok">Approved</span></td>
-              </tr>
-              <tr>
-                <td>paid leave</td>
-                <td>10 feb 2025–21 feb 2025</td>
-                <td>04 days</td>
-                <td><span class="badge bad">refused</span></td>
+
+              <tr *ngIf="myLeaves.length === 0">
+                <td colspan="5" style="text-align:center; padding:20px;">No leave demands yet</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Pagination (pied du cadre) -->
+
         <div class="pagination">
-
-
-          <span class="range">Showing 1 to 10 out of 12 records</span>
+          <span class="range">
+            Showing {{ startIndex }} to {{ endIndex }} out of {{ totalRecords }} records
+          </span>
 
           <div class="pages">
-            <button class="chev">&lsaquo;</button>
-            <button class="page is-active">1</button>
-            <button class="page">2</button>
-            <button class="page">3</button>
-            <button class="page">4</button>
-            <button class="chev">&rsaquo;</button>
+            <button class="chev" (click)="prevPage()" [disabled]="currentPage === 1">&lsaquo;</button>
+
+            <button class="page" *ngFor="let p of pages" [class.is-active]="p === currentPage" (click)="goToPage(p)">
+              {{ p }}
+            </button>
+
+            <button class="chev" (click)="nextPage()" [disabled]="currentPage === totalPages">&rsaquo;</button>
           </div>
         </div>
       </div>
 
     </div>
     <!-- CREDIT TAB -->
-    <div *ngIf="activeTab==='credit'">
+    <div *ngIf="!authService.isAdmin() && activeTab==='credit'">
       <div class="card credit">
         <div class="kpi">
           <div class="kpi__heading">
@@ -158,70 +173,52 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Darlene Miles</td>
+              <tr *ngFor="let r of teamLeaves">
+                <td>{{ r.employeeName || r.employeeId }}</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                          ok: r.status === 'approved',
+                          bad: r.status === 'refused',
+                          pending: r.status === 'pending'
+                         }">
+                    {{ r.status }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions">
+                    <button class="action-btn" (click)="onView(r)" title="View">
+                      <img src="assets/images/see.svg" alt="">
+                    </button>
+                  </div>
+                </td>
+              </tr>
 
-                <td><span class="badge ok">Approved</span></td>
-                <td>
-                  <div class="actions">
-                    <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
-                    <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
-                    <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Cody Fisher</td>
-                <td><span class="badge ok">Approved</span></td>
-                <td>
-                  <div class="actions">
-                    <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
-                    <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
-                    <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Floyd Miles</td>
-                <td><span class="badge ok">Approved</span></td>
-                <td>
-                  <div class="actions">
-                    <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
-                    <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
-                    <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Jacob Simmons</td>
-                <td><span class="badge bad">refused</span></td>
-                <td>
-                  <div class="actions">
-                    <button class="action-btn"><img src="assets/images/see.svg" alt=""></button>
-                    <button class="action-btn"><img src="assets/images/edit.svg" alt=""></button>
-                    <button class="action-btn"><img src="assets/images/delete.svg" alt=""></button>
-                  </div>
-                </td>
+              <tr *ngIf="teamLeaves.length === 0">
+                <td colspan="3" style="text-align:center; padding:20px;">No team demands</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Pagination (pied du cadre) -->
+
         <div class="pagination">
-
-
-          <span class="range">Showing 1 to 10 out of 12 records</span>
+          <span class="range">
+            Showing {{ teamStartIndex }} to {{ teamEndIndex }} out of {{ totalTeamRecords }} records
+          </span>
 
           <div class="pages">
-            <button class="chev">&lsaquo;</button>
-            <button class="page is-active">1</button>
-            <button class="page">2</button>
-            <button class="page">3</button>
-            <button class="page">4</button>
-            <button class="chev">&rsaquo;</button>
+            <button class="chev" (click)="teamPrevPage()" [disabled]="currentPageTeam === 1">&lsaquo;</button>
+
+            <button class="page" *ngFor="let p of teamPages" [class.is-active]="p === currentPageTeam"
+              (click)="teamGoToPage(p)">
+              {{ p }}
+            </button>
+
+            <button class="chev" (click)="teamNextPage()"
+              [disabled]="currentPageTeam === totalTeamPages">&rsaquo;</button>
           </div>
         </div>
+
       </div>
 
     </div>
@@ -230,101 +227,211 @@
 </div>
 
 
-<!-- Backdrop gris -->
+
 <div class="overlay-backdrop" *ngIf="showOverlay" (click)="closeOverlay()"></div>
 
-
 <div class="overlay" *ngIf="showOverlay" (click)="closeOverlay()">
-
   <div class="overlay-card" (click)="$event.stopPropagation()">
-    <h3>Leave Demand</h3>
-    <label>Leave Type</label>
-    <div class="field">
 
-      <select>
-        <option>Sickness</option>
-        <option>Paid Leave</option>
-        <option>Remote</option>
-        <option>Marriage</option>
-      </select>
-
-    </div>
-    <label>Start Date</label>
-    <div class="field">
-
-      <input type="date" />
-
-    </div>
+    <h3>{{ mode === 'edit' ? 'Edit Leave' : 'New Leave Demand' }}</h3>
 
 
+    <div class="api-error" *ngIf="apiError">{{ apiError }}</div>
 
-    <!-- Boutons d’option (non sélectionnés par défaut) -->
-    <div class="btn-group">
-      <button class="btn-option" [class.selected]="selectedStart==='full'" (click)="selectedStart='full'">Full
-        Day</button>
 
-      <button class="btn-option" [class.selected]="selectedStart==='morning'"
-        (click)="selectedStart='morning'">Morning</button>
+    <form [formGroup]="leaveForm">
 
-      <button class="btn-option" [class.selected]="selectedStart==='afternoon'"
-        (click)="selectedStart='afternoon'">Afternoon</button>
-    </div>
-    <label>End Date</label>
-    <div class="field">
 
-      <input type="date" />
-    </div>
+      <div class="field-wrap">
+        <div class="field select-field">
+          <span class="req-star">*</span>
+          <select formControlName="leaveType" [class.placeholder]="!leaveForm.get('leaveType')?.value">
+            <option value="" disabled hidden>Leave Type</option>
 
-    <div class="btn-group">
-      <button class="btn-option" [class.selected]="selectedEnd==='full'" (click)="selectedEnd='full'">Full Day</button>
+            <option value="remote">Remote</option>
+            <option value="sickness">Sickness</option>
+            <option value="marriage">Marriage</option>
+            <option value="maternity">Maternity</option>
+            <option value="paternity">Paternity</option>
+            <option value="unpaid">Unpaid Leave</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <small class="error" *ngIf="isInvalid('leaveType')">
+          {{ getErrorMessage('leaveType') }}
+        </small>
+      </div>
 
-      <button class="btn-option" [class.selected]="selectedEnd==='morning'"
-        (click)="selectedEnd='morning'">Morning</button>
-    </div>
-    <label>Attachment</label>
+      <div class="field-wrap" *ngIf="leaveForm.get('leaveType')?.value === 'other'">
+        <div class="field">
+          <span class="req-star">*</span>
+          <input type="text" formControlName="otherReason" placeholder="Please specify..." />
+        </div>
+        <small class="error" *ngIf="isInvalid('otherReason')">
+          {{ getErrorMessage('otherReason') }}
+        </small>
+      </div>
 
-    <div class="upload-box" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+      <!-- Start Date -->
+      <div class="field-wrap">
+        <div class="field">
+          <span class="req-star">*</span>
+          <input type="date" formControlName="startDate" [min]="today" />
+        </div>
+        <small class="error" *ngIf="isInvalid('startDate')">
+          {{ getErrorMessage('startDate') }}
+        </small>
+      </div>
 
-      <input #fileInput type="file" (change)="onFileSelected($event)" hidden>
+      <!-- Start Part -->
+      <div class="btn-group">
+        <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Full"
+          (click)="leaveForm.patchValue({startPart: LeavePart.Full})">Full Day</button>
 
-      <!-- Affichage par défaut (aucun fichier) -->
-      <ng-container *ngIf="!fileName; else fileChosen">
-        <div class="upload-content">
-          <div class="upload-icon-wrap" (click)="fileInput.click()">
-            <svg viewBox="0 0 24 24" class="upload-icon" aria-hidden="true">
-              <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17a4 4 0 004 4h8a4 4 0 004-4" fill="none" stroke="currentColor"
-                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Morning"
+          (click)="leaveForm.patchValue({startPart: LeavePart.Morning})">Morning</button>
+
+        <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Afternoon"
+          (click)="leaveForm.patchValue({startPart: LeavePart.Afternoon})">Afternoon</button>
+      </div>
+
+      <!-- End Date -->
+      <div class="field-wrap">
+        <div class="field">
+          <span class="req-star">*</span>
+          <input type="date" formControlName="endDate" [min]="today" />
+        </div>
+        <small class="error"
+          *ngIf="(isInvalid('endDate') || isInvalid('startDate')) && leaveForm.errors?.['endBeforeStart']">
+          End date must be after (or equal) start date
+        </small>
+
+        <small class="error" *ngIf="isInvalid('endDate') && !leaveForm.errors?.['endBeforeStart']">
+          {{ getErrorMessage('endDate') }}
+        </small>
+      </div>
+
+      <div class="btn-group">
+        <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Full"
+          (click)="leaveForm.patchValue({endPart: LeavePart.Full})">Full Day</button>
+
+        <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Morning"
+          (click)="leaveForm.patchValue({endPart: LeavePart.Morning})">Morning</button>
+
+        <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Afternoon"
+          (click)="leaveForm.patchValue({endPart: LeavePart.Afternoon})">Afternoon</button>
+      </div>
+
+      <div class="upload-box" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+
+        <input #fileInput type="file" (change)="onFileSelected($event)" hidden>
+
+
+        <ng-container *ngIf="!fileName; else fileChosen">
+          <div class="upload-content">
+            <div class="upload-icon-wrap" (click)="fileInput.click()">
+              <svg viewBox="0 0 24 24" class="upload-icon" aria-hidden="true">
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17a4 4 0 004 4h8a4 4 0 004-4" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="upload-title">Drag &amp; Drop or Choose files to upload</div>
+            <div class="upload-subtitle">
+              Supported formats: JPEG, PNG, GIF, MP4, PDF, PSD, AI, Word, PPT
+            </div>
+          </div>
+        </ng-container>
+
+
+        <ng-template #fileChosen>
+          <div class="upload-chosen" title="{{ fileName }}">
+            <svg class="file-badge" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor"
+                opacity=".12" />
+              <path d="M14 2v6h6" stroke="currentColor" fill="none" />
             </svg>
+            <span class="upload-filename">{{ fileName }}</span>
+            <a *ngIf="existingAttachmentUrl && !file" class="open-attach" [href]="existingAttachmentUrl" target="_blank"
+              (click)="$event.stopPropagation()">
+              Open
+            </a>
+
+
+            <button type="button" class="clear-file" (click)="clearFile($event)">×</button>
           </div>
+        </ng-template>
+      </div>
+      <small class="error" *ngIf="submitted && leaveForm.errors?.['attachmentRequired']">
+        Attachment is required for sickness leave
+      </small>
 
-          <div class="upload-title">Drag &amp; Drop or Choose files to upload</div>
-          <div class="upload-subtitle">
-            Supported formats: JPEG, PNG, GIF, MP4, PDF, PSD, AI, Word, PPT
-          </div>
-        </div>
-      </ng-container>
 
-      <!-- Affichage quand un fichier est choisi : uniquement le nom -->
-      <ng-template #fileChosen>
-        <div class="upload-chosen" title="{{ fileName }}">
-          <svg class="file-badge" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor" opacity=".12" />
-            <path d="M14 2v6h6" stroke="currentColor" fill="none" />
-          </svg>
-          <span class="upload-filename">{{ fileName }}</span>
 
-          <!-- (optionnel) bouton pour effacer le fichier -->
-          <button type="button" class="clear-file" (click)="clearFile($event)">×</button>
-        </div>
-      </ng-template>
+      <div class="new-demand-footer">
+        <button type="button" class="btn ghost" (click)="closeOverlay()">Cancel</button>
+        <button type="button" class="btn primary" (click)="onApply()">{{ mode === 'edit' ? 'Update' : 'Apply'
+          }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="overlay-backdrop" *ngIf="showDetails" (click)="closeDetails()"></div>
+
+<div class="overlay" *ngIf="showDetails" (click)="closeDetails()">
+  <div class="overlay-card" (click)="$event.stopPropagation()">
+    <h3>Leave Details</h3>
+
+    <div *ngIf="selectedLeave">
+      <p><b>Type:</b> {{ selectedLeave.leaveType }}</p>
+      <p><b>Period:</b> {{ selectedLeave.startDate }} – {{ selectedLeave.endDate }}</p>
+      <p><b>Duration:</b> {{ selectedLeave.duration }} jours</p>
+      <p><b>Start part:</b> {{ selectedLeave.startPart }}</p>
+      <p><b>End part:</b> {{ selectedLeave.endPart }}</p>
+      <p *ngIf="selectedLeave.leaveType === 'other'">
+        <b>Reason:</b> {{ selectedLeave.otherReason }}
+      </p>
+
+      <p>
+        <b>Status:</b>
+        <span class="badge" [ngClass]="{
+            ok: selectedLeave.status === 'approved',
+            bad: selectedLeave.status === 'refused',
+            pending: selectedLeave.status === 'pending'
+          }">
+          {{ selectedLeave.status }}
+        </span>
+      </p>
+      <div class="attachment-url">
+        <p *ngIf="selectedLeave.attachmentUrl">
+          <b>Attachment:</b>
+          <a [href]="existingAttachmentUrl" target="_blank">Open</a>
+        </p>
+
+      </div>
+
     </div>
-
-
-
-
 
     <div class="new-demand-footer">
-      <button class="btn ghost" (click)="closeOverlay()">Cancel</button>
-      <button class="btn primary" (click)="closeOverlay()">Apply</button>
+
+      <div class="modal-actions">
+
+        <button class="btn approve" *ngIf="activeTab === 'team-demand' && selectedLeave?.status === LeaveStatus.Pending"
+          [disabled]="updatingStatus" (click)="updateSelectedStatus(LeaveStatus.Approved)">
+          Approve
+        </button>
+
+        <button class="btn refuse" *ngIf="activeTab === 'team-demand' && selectedLeave?.status === LeaveStatus.Pending"
+          [disabled]="updatingStatus" (click)="updateSelectedStatus(LeaveStatus.Refused)">
+          Refuse
+        </button>
+
+
+        <button class="btn close" (click)="closeDetails()">
+          Close
+        </button>
+      </div>
     </div>
   </div>
+</div>

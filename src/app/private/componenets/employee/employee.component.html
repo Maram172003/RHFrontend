@@ -70,7 +70,7 @@
                             <tr *ngFor="let e of pagedEmployees">
                                 <td>
                                     <div class="user">
-                                        <img class="user-img" [src]="getEmployeePhoto(e.id) || 'assets/images/p1.svg'"
+                                        <img class="user-img" [src]="toPhotoSrc(e.photoUrl) || 'assets/images/p1.svg'"
                                             alt="Employee photo">
                                         <span>{{ (e.firstName || '') + ' ' + (e.lastName || '') || e.email }}</span>
                                     </div>
@@ -84,7 +84,8 @@
                                     <div class="actions">
                                         <button class="action-btn" (click)="onSeen(e)"><img src="assets/images/see.svg"
                                                 alt=""></button>
-                                        <button class="action-btn" (click)="onEdit(e); $event.stopPropagation()"><img src="assets/images/edit.svg" alt=""></button>
+                                        <button class="action-btn" (click)="onEdit(e); $event.stopPropagation()"><img
+                                                src="assets/images/edit.svg" alt=""></button>
                                         <button class="action-btn"
                                             (click)="onDeleteEmployee(e.id); $event.stopPropagation()"><img
                                                 src="assets/images/delete.svg" alt=""></button>
@@ -425,8 +426,7 @@
 
                             <footer class="card__footer">
                                 <button type="button" class="btn btn--ghost" (click)="onCancelAdd()">Cancel</button>
-                                <button type="button" class="btn btn--primary"
-                                    (click)="onNextEmailStep()">Next</button>
+                                <button type="button" class="btn btn--primary" (click)="onNextEmailStep()">Next</button>
                             </footer>
 
 

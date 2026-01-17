@@ -64,7 +64,8 @@ body {
   height: 42px;
   border-radius: 50%;
   object-fit: cover;
-  /* ou contain */
+  display: block;
+  flex: 0 0 44px;
   object-position: center;
   background: #e5e7eb;
 }
@@ -86,6 +87,14 @@ body {
   align-items: center;
   justify-content: center;
   color: #666;
+}
+
+.employee-photo{
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
 }
 
 

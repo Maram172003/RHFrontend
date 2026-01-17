@@ -64,7 +64,6 @@ body{
   font:500 15px/1 Lexend,cursive;
   cursor:pointer;
   transition:.2s;
- 
   
   
 }
@@ -466,4 +465,80 @@ tbody td{
     align-items: center;
     justify-content: center;
     color: #666;
+}
+
+.field-wrap { margin-bottom: 12px; }
+
+.req-star{
+  color:#f45b69;
+  font-weight:700;
+  position:absolute;
+  right:7px;
+  top:10px;
+}
+
+.field{
+  position:relative;
+  margin-bottom: 11px;
+}
+
+.error{
+  display:block;
+  color:#f45b69;
+  font-size:12px;
+  margin-top:4px;
+}
+
+.api-error{
+  border:1px solid rgba(244,91,105,.35);
+  background: rgba(244,91,105,.08);
+  color:#b03a45;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:13px;
+  margin-bottom:10px;
+}
+
+.btn-group{
+  margin-bottom: 11px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.badge.ok {
+  background: rgba(63, 194, 138, 0.1);
+  color: #3fc28a;
+}
+
+.badge.bad {
+  background: rgba(244, 91, 105, 0.1);
+  color: #f45b69;
+}
+
+.badge.pending {
+  background: rgba(240, 214, 75, 0.15);
+  color: #c9a700;
+}
+
+.action-btn {
+  width: 20px;
+  height: 15px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.attachment-url a{
+ color: var(--teal, #1fc5b2);
+
 }
