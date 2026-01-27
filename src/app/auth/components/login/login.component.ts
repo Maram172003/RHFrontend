@@ -13,7 +13,11 @@ export class LoginComponent implements OnInit {
   loading = false;
   error = '';
   form!: FormGroup;
+  showSplash = true;
+  splashLeaving = false;
 
+  private minSplashMs = 1800; // ✅ splash reste au moins 1.8s
+  private startedAt = Date.now();
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) { }
 
   ngOnInit(): void {
@@ -23,7 +27,24 @@ export class LoginComponent implements OnInit {
       accessCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
 
     });
+    
   }
+  onSplashLoaded(): void {
+    const elapsed = Date.now() - this.startedAt;
+    const wait = Math.max(0, this.minSplashMs - elapsed);
+
+    setTimeout(() => {
+      // lance animation de sortie
+      this.splashLeaving = true;
+
+      // attend la fin de l'animation CSS
+      setTimeout(() => {
+        this.showSplash = false;
+      }, 450);
+    }, wait);
+  }
+
+
 
   submit(): void {
     if (this.form.invalid) return;
@@ -42,11 +63,11 @@ export class LoginComponent implements OnInit {
         if (role === 'hr' || role === 'admin') {
           this.router.navigateByUrl('/dashboard-admin');
         } else {
-        
+
           this.router.navigateByUrl('/dashboard-super');
         }
 
-       
+
         if (res?.mustReset) {
           this.router.navigateByUrl('/reset-access-code');
         }

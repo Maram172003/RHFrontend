@@ -1,0 +1,256 @@
+<div class="main-container">
+
+
+    <app-sidebar-administration *ngIf="authService.isAdmin() || authService.isHr()">
+    </app-sidebar-administration>
+
+    <app-sidebarsuper *ngIf="authService.isSupervisor() || authService.isEmployee()">
+    </app-sidebarsuper>
+
+    <section class="content-area">
+        <app-navbar></app-navbar>
+
+        <!-- Tabs row -->
+        <div class="tabs-row">
+            <div class="tabs tabs--2">
+                <button class="tab" [class.is-active]="activeTab==='profile'" (click)="selectTab('profile')">
+                    Profile
+                </button>
+                <button class="tab" [class.is-active]="activeTab==='security'" (click)="selectTab('security')">
+                    Security
+                </button>
+            </div>
+        </div>
+
+        <!-- ================== TAB: PROFILE ================== -->
+        <div *ngIf="activeTab==='profile'" class="card-add-employee-card">
+
+            <header class="card__header">
+                <div class="card__title">
+                    <span class="avatar">
+                        <img src="assets/images/personnalinfo.svg" alt="personnal" />
+                    </span>
+                    <h2>Personal Information</h2>
+                </div>
+
+                <!-- Edit emoji -->
+                <button type="button" class="edit-emoji" *ngIf="mode==='view'" (click)="onEdit()" title="Edit">
+                    <img src="assets/images/edit.png" alt="edit" />
+                </button>
+            </header>
+
+            <div class="card__body" [formGroup]="profileForm">
+                <div class="form-upload-grid">
+
+                    <!-- Form -->
+                    <form class="grid-form" novalidate>
+                        <div class="field-wrap">
+                            <div class="field">
+                                <input type="text" placeholder="First Name" formControlName="firstName"
+                                    [readonly]="mode==='view'">
+                                <span class="req-star">*</span>
+                            </div>
+                            <small class="error" *ngIf="isInvalid('firstName')">Required</small>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field">
+                                <input type="text" placeholder="Last Name" formControlName="lastName"
+                                    [readonly]="mode==='view'">
+                                <span class="req-star">*</span>
+                            </div>
+                            <small class="error" *ngIf="isInvalid('lastName')">Required</small>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field">
+                                <input type="tel" placeholder="Mobile Number" formControlName="mobile"
+                                    [readonly]="mode==='view'">
+                                <span class="req-star">*</span>
+                            </div>
+                            <small class="error" *ngIf="isInvalid('mobile')">Required</small>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field">
+                                <input type="email" placeholder="Email Address" formControlName="email"
+                                    [readonly]="mode==='view'">
+                                <span class="req-star">*</span>
+                            </div>
+                            <small class="error" *ngIf="isInvalid('email')">Invalid email</small>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field date-field" [class.is-view]="mode==='view'">
+                                <input type="date" [max]="today" formControlName="dob" [readonly]="mode==='view'">
+                                <span class="date-placeholder" *ngIf="!profileForm.get('dob')?.value">Date of
+                                    Birth</span>
+                            </div>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field select-field">
+                                <select formControlName="maritalStatus" [disabled]="mode==='view'">
+                                    <option value="" disabled hidden>Marital Status</option>
+                                    <option *ngFor="let m of maritalStatuses" [value]="m">{{ m }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field select-field">
+                                <select formControlName="gender" [disabled]="mode==='view'">
+                                    <option value="" disabled hidden>Gender</option>
+                                    <option *ngFor="let g of genders" [value]="g">{{ g }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field select-field">
+                                <select formControlName="nationality" [disabled]="mode==='view'">
+                                    <option value="" disabled hidden>Nationality</option>
+                                    <option *ngFor="let n of nationalities" [value]="n">{{ n }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field-wrap span-2">
+                            <div class="field">
+                                <input type="text" placeholder="Address" formControlName="address"
+                                    [readonly]="mode==='view'">
+                            </div>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field select-field">
+                                <select formControlName="state" [disabled]="mode==='view'">
+                                    <option value="" disabled hidden>State</option>
+                                    <option *ngFor="let s of states" [value]="s">{{ s }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field select-field">
+                                <select formControlName="city" [disabled]="mode==='view' || !cities.length">
+                                    <option value="" disabled hidden>City</option>
+                                    <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field">
+                                <input type="text" placeholder="Zip Code" formControlName="zip"
+                                    [readonly]="mode==='view'">
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Upload -->
+                    <div class="upload-box" (click)="mode!=='view' && fileInput.click()"
+                        (dragover)="mode!=='view' && onDragOver($event)"
+                        (dragleave)="mode!=='view' && onDragLeave($event)" (drop)="mode!=='view' && onDrop($event)">
+
+                        <input #fileInput type="file" (change)="mode!=='view' && onFileSelected($event)"
+                            [disabled]="mode==='view'" hidden>
+
+                        <ng-container *ngIf="(!fileName && !viewPhotoUrl); else fileChosen">
+                            <div class="upload-content">
+                                <div class="upload-icon-wrap">
+                                    <svg viewBox="0 0 24 24" class="upload-icon" aria-hidden="true">
+                                        <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17a4 4 0 004 4h8a4 4 0 004-4" fill="none"
+                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                                <div class="upload-title">Drag &amp; Drop or Choose files to upload</div>
+                                <div class="upload-subtitle">Supported formats: JPEG, PNG</div>
+                            </div>
+                        </ng-container>
+
+                        <ng-template #fileChosen>
+                            <div class="upload-chosen" title="{{ fileName }}">
+                                <div class="preview-area">
+                                    <img *ngIf="filePreviewUrl || viewPhotoUrl" class="upload-preview"
+                                        [src]="filePreviewUrl || viewPhotoUrl" alt="Profile photo" />
+                                </div>
+
+                                <div class="meta-area">
+                                    <span class="upload-filename" *ngIf="fileName">{{ fileName }}</span>
+                                    <button type="button" class="clear-file" *ngIf="mode !== 'view'"
+                                        (click)="clearFile($event)">×</button>
+                                </div>
+                            </div>
+                        </ng-template>
+
+                    </div>
+                </div>
+
+                <div class="api-error" *ngIf="apiError">{{ apiError }}</div>
+                <div class="api-success" *ngIf="apiSuccess">{{ apiSuccess }}</div>
+
+                <!-- Save/Cancel en bas (comme employee) -->
+                <footer class="card__footer" *ngIf="mode==='edit'">
+                    <button type="button" class="btn btn--ghost" (click)="onCancelEdit()">Cancel</button>
+                    <button type="button" class="btn btn--primary" (click)="onSaveProfile()">Save</button>
+                </footer>
+            </div>
+        </div>
+
+        <!-- ================== TAB: SECURITY ================== -->
+        <div *ngIf="activeTab==='security'" class="card-add-employee-card">
+
+            <header class="card__header">
+                <div class="card__title">
+                    <span class="avatar">
+                        <img src="assets/images/lock.png" alt="lock" />
+                    </span>
+                    <h2>Security</h2>
+                </div>
+            </header>
+
+            <div class="card__body" [formGroup]="passwordForm">
+                <form class="grid-form" novalidate>
+                    <div class="field-wrap">
+                        <div class="field">
+                            <input type="password" placeholder="Current Password" formControlName="currentAccessCode" />
+                            <span class="req-star">*</span>
+                        </div>
+                        <small class="error" *ngIf="isInvalidPass('currentAccessCode')">Required</small>
+                    </div>
+
+                    <div class="field-wrap">
+                        <div class="field">
+                            <input type="password" placeholder="New Password" formControlName="newAccessCode" />
+                            <span class="req-star">*</span>
+                        </div>
+                        <small class="error" *ngIf="isInvalidPass('newAccessCode')">Min 4 chars</small>
+                    </div>
+
+                    <div class="field-wrap">
+                        <div class="field">
+                            <input type="password" placeholder="Confirm Password" formControlName="confirmAccessCode" />
+                            <span class="req-star">*</span>
+                        </div>
+                        <small class="error"
+                            *ngIf="passwordForm.errors?.['codeMismatch'] && (passwordForm.touched || passwordForm.dirty)">
+                            Confirmation does not match
+                        </small>
+                    </div>
+                </form>
+
+                <footer class="card__footer">
+                    <button class="btn btn--primary" type="button" (click)="onChangePassword()">
+                        Update Password
+                    </button>
+                </footer>
+
+                <div class="api-error" *ngIf="apiError">{{ apiError }}</div>
+                <div class="api-success" *ngIf="apiSuccess">{{ apiSuccess }}</div>
+            </div>
+        </div>
+
+    </section>
+</div>

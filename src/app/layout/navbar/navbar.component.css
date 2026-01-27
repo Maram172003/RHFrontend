@@ -10,3 +10,182 @@
 .datetime{color:#1c1b1f;font-size:14px}
 .header-icons{display:flex;gap:16px}
 .header-icons img{width:22px;height:22px;cursor:pointer}
+
+
+/* --- NOTIFICATIONS UI --- */
+.notif-wrap{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* bouton icône */
+.icon-btn{
+  position: relative;
+  background: transparent;
+  border: 0;
+  padding: 6px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease;
+}
+.icon-btn:hover{ background: rgba(0,0,0,0.05); }
+.icon-btn:active{ transform: translateY(1px); }
+
+.icon-btn img{ width:22px; height:22px; display:block; }
+.icon-btn.has-unread img{
+  animation: ring 1.2s infinite;
+}
+@keyframes ring{
+  0%,100%{ transform: rotate(0); }
+  10%{ transform: rotate(10deg); }
+  20%{ transform: rotate(-10deg); }
+  30%{ transform: rotate(8deg); }
+  40%{ transform: rotate(-8deg); }
+  50%{ transform: rotate(0); }
+}
+
+.badge{
+  position:absolute;
+  top:0px; right:0px;
+  min-width:18px; height:18px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#ff4d4f;
+  color:#fff;
+  font-size:12px;
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+/* panel */
+.notif-panel{
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 380px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.10);
+  overflow: hidden;
+  z-index: 9999;
+}
+
+/* petite flèche */
+.notif-panel::before{
+  content:"";
+  position:absolute;
+  top:-8px;
+  right:18px;
+  width:14px;
+  height:14px;
+  background:#fff;
+  border-left:1px solid rgba(0,0,0,0.08);
+  border-top:1px solid rgba(0,0,0,0.08);
+  transform: rotate(45deg);
+}
+
+.notif-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: rgba(31,197,178,0.06);
+}
+.notif-head span{
+  font-weight:700;
+  color:#16141b;
+}
+
+.send-btn{
+  border: 1px solid rgba(0,0,0,0.12);
+  background:#fff;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background .15s ease, transform .15s ease;
+}
+.send-btn:hover{ background: rgba(0,0,0,0.05); }
+.send-btn:active{ transform: translateY(1px); }
+
+/* composer */
+.composer{
+  padding: 10px 12px;
+  display: grid;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.composer select,
+.composer input,
+.composer textarea{
+  width: 100%;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  background: #fff;
+}
+.composer textarea{ resize: vertical; min-height: 70px; }
+
+.composer select:focus,
+.composer input:focus,
+.composer textarea:focus{
+  border-color: rgba(31,197,178,0.9);
+  box-shadow: 0 0 0 3px rgba(31,197,178,0.18);
+}
+
+.composer-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap: 8px;
+}
+.composer-actions button{
+  border: 1px solid rgba(0,0,0,0.12);
+  background:#fff;
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor:pointer;
+  font-weight:600;
+}
+.composer-actions button:last-child{
+  border-color: rgba(31,197,178,0.9);
+  background: rgba(31,197,178,0.12);
+}
+.composer-actions button:last-child:hover{
+  background: rgba(31,197,178,0.18);
+}
+
+/* list */
+.notif-list{
+  max-height: 360px;
+  overflow: auto;
+}
+.notif-item{
+  padding: 10px 12px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.notif-item:hover{ background: rgba(0,0,0,0.03); }
+.notif-item.unread{ background: rgba(31,197,178,0.08); }
+
+.nt-title{ font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+.nt-msg{ font-size: 12.5px; color: rgba(22,20,27,0.75); }
+.nt-meta{ font-size: 11.5px; color: rgba(22,20,27,0.45); margin-top: 6px; }
+
+.empty{
+  padding: 14px 12px;
+  color: rgba(22,20,27,0.55);
+  font-size: 13px;
+}

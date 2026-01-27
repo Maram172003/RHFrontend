@@ -54,13 +54,14 @@
 
           </div>
           <div>
-            <select class="chip category-select" (click)="setFilter('category')"
-              [class.is-active]="activeFilter==='category'">
-              <option disabled selected>Category</option>
-              <option>Paid Leave</option>
-              <option>Remote</option>
-              <option>Sickness</option>
-              <option>Marriage</option>
+            <select class="chip category-select" [class.is-active]="activeFilter==='category'"
+              (change)="onCategoryChange($any($event.target).value)">
+
+              <option value="" selected>Category</option>
+              <option value="paid">Paid Leave</option>
+              <option value="remote">Remote</option>
+              <option value="sickness">Sickness</option>
+              <option value="marriage">Marriage</option>
             </select>
 
           </div>
@@ -81,7 +82,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let r of myLeaves">
+              <tr *ngFor="let r of pagedLeaves">
                 <td>{{ r.leaveType === 'other' ? ('Other - ' + (r.otherReason || '')) : r.leaveType }}</td>
                 <td>{{ r.startDate }} – {{ r.endDate }}</td>
                 <td>{{ r.duration }} jours</td>
@@ -207,13 +208,14 @@
           </span>
 
           <div class="pages">
-            <button class="nav" (click)="teamPrevPage()" [disabled]="teamPage === 1">‹</button>
+            <button class="chev" (click)="teamPrevPage()" [disabled]="teamPage === 1">&lsaquo;</button>
 
-            <button class="page" *ngFor="let p of teamPages" [class.active]="p === teamPage" (click)="teamGoToPage(p)">
+            <button class="page" *ngFor="let p of teamPages" [class.is-active]="p === teamPage"
+              (click)="teamGoToPage(p)">
               {{ p }}
             </button>
 
-            <button class="nav" (click)="teamNextPage()" [disabled]="teamPage === teamTotalPages">›</button>
+            <button class="chev" (click)="teamNextPage()" [disabled]="teamPage === teamTotalPages">&rsaquo;</button>
           </div>
         </div>
 
@@ -239,140 +241,184 @@
 
     <form [formGroup]="leaveForm">
 
-
-      <div class="field-wrap">
-        <div class="field select-field">
-          <span class="req-star">*</span>
-          <select formControlName="leaveType" [class.placeholder]="!leaveForm.get('leaveType')?.value">
-            <option value="" disabled hidden>Leave Type</option>
-
-            <option value="remote">Remote</option>
-            <option value="sickness">Sickness</option>
-            <option value="marriage">Marriage</option>
-            <option value="maternity">Maternity</option>
-            <option value="paternity">Paternity</option>
-            <option value="unpaid">Unpaid Leave</option>
-            <option value="other">Other</option>
-          </select>
+      <div class="form-col">
+        <div class="field-wrap">
+          <div class="field select-field">
+            <span class="req-star">*</span>
+            <select formControlName="leaveType" [class.placeholder]="!leaveForm.get('leaveType')?.value">
+              <option value="" disabled hidden>Leave Type</option>
+              <option value="paid">Paid leave</option>
+              <option value="remote">Remote</option>
+              <option value="sickness">Sickness</option>
+              <option value="marriage">Marriage</option>
+              <option value="maternity">Maternity</option>
+              <option value="paternity">Paternity</option>
+              <option value="unpaid">Unpaid Leave</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <small class="error" *ngIf="isInvalid('leaveType')">
+            {{ getErrorMessage('leaveType') }}
+          </small>
         </div>
-        <small class="error" *ngIf="isInvalid('leaveType')">
-          {{ getErrorMessage('leaveType') }}
-        </small>
-      </div>
 
-      <div class="field-wrap" *ngIf="leaveForm.get('leaveType')?.value === 'other'">
-        <div class="field">
-          <span class="req-star">*</span>
-          <input type="text" formControlName="otherReason" placeholder="Please specify..." />
+        <div class="field-wrap" *ngIf="leaveForm.get('leaveType')?.value === 'other'">
+          <div class="field">
+            <span class="req-star">*</span>
+            <input type="text" formControlName="otherReason" placeholder="Please specify..." />
+          </div>
+          <small class="error" *ngIf="isInvalid('otherReason')">
+            {{ getErrorMessage('otherReason') }}
+          </small>
         </div>
-        <small class="error" *ngIf="isInvalid('otherReason')">
-          {{ getErrorMessage('otherReason') }}
-        </small>
-      </div>
 
-      <!-- Start Date -->
-      <div class="field-wrap">
-        <div class="field">
-          <span class="req-star">*</span>
-          <input type="date" formControlName="startDate" [min]="today" />
+        <!-- Start Date -->
+        <div class="field-wrap">
+          <div class="field date-row">
+
+            <input matInput class="date-input" placeholder="Start date"
+              [value]="leaveForm.value.startDate ? (leaveForm.value.startDate | date:'M/d/yyyy') : ''" readonly />
+
+            <button type="button" class="date-ico-btn" (click)="openSideCalendar('start')">
+              <img src="assets/images/calender.png" alt="">
+            </button>
+            <span class="req-star req-star-after">*</span>
+          </div>
+
+          <small class="error" *ngIf="isInvalid('startDate')">
+            {{ getErrorMessage('startDate') }}
+          </small>
         </div>
-        <small class="error" *ngIf="isInvalid('startDate')">
-          {{ getErrorMessage('startDate') }}
-        </small>
-      </div>
 
-      <!-- Start Part -->
-      <div class="btn-group">
-        <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Full"
-          (click)="leaveForm.patchValue({startPart: LeavePart.Full})">Full Day</button>
+        <!-- Start Part -->
+        <div class="btn-group">
+          <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Full"
+            (click)="leaveForm.patchValue({startPart: LeavePart.Full})">Full Day</button>
 
-        <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Morning"
-          (click)="leaveForm.patchValue({startPart: LeavePart.Morning})">Morning</button>
+          <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Morning"
+            (click)="leaveForm.patchValue({startPart: LeavePart.Morning})">Morning</button>
 
-        <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Afternoon"
-          (click)="leaveForm.patchValue({startPart: LeavePart.Afternoon})">Afternoon</button>
-      </div>
-
-      <!-- End Date -->
-      <div class="field-wrap">
-        <div class="field">
-          <span class="req-star">*</span>
-          <input type="date" formControlName="endDate" [min]="today" />
+          <button type="button" class="btn-option" [class.selected]="leaveForm.value.startPart===LeavePart.Afternoon"
+            (click)="leaveForm.patchValue({startPart: LeavePart.Afternoon})">Afternoon</button>
         </div>
-        <small class="error"
-          *ngIf="(isInvalid('endDate') || isInvalid('startDate')) && leaveForm.errors?.['endBeforeStart']">
-          End date must be after (or equal) start date
-        </small>
 
-        <small class="error" *ngIf="isInvalid('endDate') && !leaveForm.errors?.['endBeforeStart']">
-          {{ getErrorMessage('endDate') }}
-        </small>
-      </div>
+        <!-- End Date -->
+        <div class="field-wrap">
+          <div class="field date-row">
 
-      <div class="btn-group">
-        <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Full"
-          (click)="leaveForm.patchValue({endPart: LeavePart.Full})">Full Day</button>
+            <input matInput class="date-input" placeholder="End date"
+              [value]="leaveForm.value.endDate ? (leaveForm.value.endDate | date:'M/d/yyyy') : ''" readonly />
 
-        <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Morning"
-          (click)="leaveForm.patchValue({endPart: LeavePart.Morning})">Morning</button>
+            <button type="button" class="date-ico-btn" (click)="openSideCalendar('end')">
+              <img src="assets/images/calender.png" alt="">
+            </button>
+            <span class="req-star req-star-after">*</span>
+          </div>
 
-        <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Afternoon"
-          (click)="leaveForm.patchValue({endPart: LeavePart.Afternoon})">Afternoon</button>
-      </div>
+          <small class="error" *ngIf="submitted && leaveForm.errors?.['endBeforeStart']">
+            End date must be after (or equal) start date
+          </small>
 
-      <div class="upload-box" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+          <small class="error" *ngIf="isInvalid('endDate') && !leaveForm.errors?.['endBeforeStart']">
+            {{ getErrorMessage('endDate') }}
+          </small>
+        </div>
 
-        <input #fileInput type="file" (change)="onFileSelected($event)" hidden>
+        <div class="btn-group">
+          <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Full"
+            (click)="leaveForm.patchValue({endPart: LeavePart.Full})">Full Day</button>
+
+          <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Morning"
+            (click)="leaveForm.patchValue({endPart: LeavePart.Morning})">Morning</button>
+
+          <button type="button" class="btn-option" [class.selected]="leaveForm.value.endPart===LeavePart.Afternoon"
+            (click)="leaveForm.patchValue({endPart: LeavePart.Afternoon})">Afternoon</button>
+        </div>
+
+        <div class="upload-box" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)">
+
+          <input #fileInput type="file" (change)="onFileSelected($event)" hidden>
 
 
-        <ng-container *ngIf="!fileName; else fileChosen">
-          <div class="upload-content">
-            <div class="upload-icon-wrap" (click)="fileInput.click()">
-              <svg viewBox="0 0 24 24" class="upload-icon" aria-hidden="true">
-                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17a4 4 0 004 4h8a4 4 0 004-4" fill="none" stroke="currentColor"
-                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          <ng-container *ngIf="!fileName; else fileChosen">
+            <div class="upload-content">
+              <div class="upload-icon-wrap" (click)="fileInput.click()">
+                <svg viewBox="0 0 24 24" class="upload-icon" aria-hidden="true">
+                  <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17a4 4 0 004 4h8a4 4 0 004-4" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+
+              <div class="upload-title">Drag &amp; Drop or Choose files to upload</div>
+              <div class="upload-subtitle">
+                Supported formats: JPEG, PNG, GIF, MP4, PDF, PSD, AI, Word, PPT
+              </div>
+            </div>
+          </ng-container>
+
+
+          <ng-template #fileChosen>
+            <div class="upload-chosen" title="{{ fileName }}">
+              <svg class="file-badge" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor"
+                  opacity=".12" />
+                <path d="M14 2v6h6" stroke="currentColor" fill="none" />
               </svg>
+              <span class="upload-filename">{{ fileName }}</span>
+              <a *ngIf="existingAttachmentUrl && !file" class="open-attach" [href]="existingAttachmentUrl"
+                target="_blank" (click)="$event.stopPropagation()">
+                Open
+              </a>
+
+
+              <button type="button" class="clear-file" (click)="clearFile($event)">×</button>
             </div>
-
-            <div class="upload-title">Drag &amp; Drop or Choose files to upload</div>
-            <div class="upload-subtitle">
-              Supported formats: JPEG, PNG, GIF, MP4, PDF, PSD, AI, Word, PPT
-            </div>
-          </div>
-        </ng-container>
+          </ng-template>
+        </div>
+        <small class="error" *ngIf="submitted && leaveForm.errors?.['attachmentRequired']">
+          Attachment is required for sickness leave
+        </small>
 
 
-        <ng-template #fileChosen>
-          <div class="upload-chosen" title="{{ fileName }}">
-            <svg class="file-badge" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor"
-                opacity=".12" />
-              <path d="M14 2v6h6" stroke="currentColor" fill="none" />
-            </svg>
-            <span class="upload-filename">{{ fileName }}</span>
-            <a *ngIf="existingAttachmentUrl && !file" class="open-attach" [href]="existingAttachmentUrl" target="_blank"
-              (click)="$event.stopPropagation()">
-              Open
-            </a>
 
-
-            <button type="button" class="clear-file" (click)="clearFile($event)">×</button>
-          </div>
-        </ng-template>
+        <div class="new-demand-footer">
+          <button type="button" class="btn ghost" (click)="closeOverlay()">Cancel</button>
+          <button type="button" class="btn primary" (click)="onApply()">{{ mode === 'edit' ? 'Update' : 'Apply'
+            }}</button>
+        </div>
       </div>
-      <small class="error" *ngIf="submitted && leaveForm.errors?.['attachmentRequired']">
-        Attachment is required for sickness leave
-      </small>
 
+      <div class="calendar-float" *ngIf="sideCalendarOpen" (click)="$event.stopPropagation()">
 
+        <div class="cal-head">
+          <div class="cal-title">
+            {{ sideTarget === 'start' ? 'Pick start date' : 'Pick end date' }}
+          </div>
+          <button type="button" class="cal-close" (click)="closeSideCalendar()">✕</button>
+        </div>
 
-      <div class="new-demand-footer">
-        <button type="button" class="btn ghost" (click)="closeOverlay()">Cancel</button>
-        <button type="button" class="btn primary" (click)="onApply()">{{ mode === 'edit' ? 'Update' : 'Apply'
-          }}</button>
+        <mat-calendar [selected]="sideTarget==='start'
+            ? parseYMD(leaveForm.value.startDate)
+            : parseYMD(leaveForm.value.endDate)" (selectedChange)="onSideDateSelected($event)" [minDate]="todayDate"
+          [dateFilter]="dateFilter" [dateClass]="dateClass">
+        </mat-calendar>
+        <div class="cal-legend">
+          <div class="legend-item">
+            <span class="legend-dot holiday"></span>
+            <span>public holiday</span>
+          </div>
+
+          <div class="legend-item">
+            <span class="legend-dot busy"></span>
+            <span>a leave already exists</span>
+          </div>
+        </div>
+
       </div>
     </form>
   </div>
+
 </div>
 
 <div class="overlay-backdrop" *ngIf="showDetails" (click)="closeDetails()"></div>

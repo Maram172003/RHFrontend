@@ -1069,7 +1069,7 @@ tbody td {
 
 .req-star {
   position: absolute;
-  right: 12px;
+  right: 14px;
   top: 12px;
   color: #e11d48;
   font-weight: 700;
@@ -1113,4 +1113,30 @@ tbody td {
 
 .line-manager-field select {
   width: 100%;
+}
+.edit-emoji{
+  width: 42px;
+  height: 42px;
+  border: 0px solid #cfd5da;
+  background: #fff;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 10px;
+}
+
+.edit-emoji img{
+  width: 18px;     /* ajuste حسب الصورة */
+  height: 18px;
+  object-fit: contain;
+}
+
+.edit-emoji:hover{
+  background: #f5f7f9;
+}
+
+.edit-emoji:active{
+  transform: scale(0.98);
 }

@@ -60,5 +60,13 @@ export class EmployeesService {
     return this.http.post(`${this.base}/employees/submit`, formData);
   }
 
+  updateDetailsPhoto(id: string, details: any, file?: File | null, removePhoto?: boolean) {
+    const fd = new FormData();
+    fd.append('details', JSON.stringify(details));
+    if (file) fd.append('photo', file);
+    if (removePhoto) fd.append('removePhoto', 'true');
+
+    return this.http.patch(`${this.base}/employees/${id}/details-with-photo`, fd);
+  }
 
 }

@@ -18,7 +18,7 @@
             </span>
             <span class="kpi-title">Total Employee</span>
           </div>
-          <div class="kpi-value">560</div>
+          <div class="kpi-value">{{ totalEmployees }}</div>
 
           <div class="kpi__updatebar">
             Update: {{ lastUpdated | date:'MMMM d, y' }}
@@ -31,7 +31,7 @@
             </span>
             <span class="kpi-title">Today Attendance</span>
           </div>
-          <div class="kpi-value">560</div>
+          <div class="kpi-value">{{ todayAttendance }}</div>
 
           <div class="kpi__updatebar">
             Update: {{ lastUpdated | date:'MMMM d, y' }}
@@ -45,7 +45,7 @@
             </span>
             <span class="kpi-title">Pending Time Off</span>
           </div>
-          <div class="kpi-value">560</div>
+          <div class="kpi-value">{{ pendingTimeOff }}</div>
 
           <div class="kpi__updatebar">
             Update: {{ lastUpdated | date:'MMMM d, y' }}
@@ -59,7 +59,7 @@
             </span>
             <span class="kpi-title">Total Departments</span>
           </div>
-          <div class="kpi-value">560</div>
+          <div class="kpi-value">{{ totalDepartments }}</div>
 
           <div class="kpi__updatebar">
             Update: {{ lastUpdated | date:'MMMM d, y' }}
@@ -75,51 +75,27 @@
           <div class="card-head">
             <h3>Leave Overview</h3>
             <div class="date-menu-wrap" (click)="$event.stopPropagation()">
-              <button class="ghost-btn" (click)="toggleDateMenu()">
-                {{ lastUpdated | date:'MMMM d, y' }} ▾
+              <button class="ghost-btn" (click)="toggleDateMenu('leave'); $event.stopPropagation()">
+                {{ leaveDate | date:'MMMM d, y' }} ▾
               </button>
 
-              <!-- menu des 2 jours précédents -->
-              <ul class="date-menu" *ngIf="dateMenuOpen">
-                <li (click)="setLastUpdated(yesterday)">
-                  {{ yesterday | date:'MMMM d, y' }}
-                </li>
-                <li (click)="setLastUpdated(twoDaysAgo)">
-                  {{ twoDaysAgo | date:'MMMM d, y' }}
-                </li>
+              <ul class="date-menu" *ngIf="openMenu === 'leave'">
+                <li (click)="setCardDate('leave', yesterday)">{{ yesterday | date:'MMMM d, y' }}</li>
+                <li (click)="setCardDate('leave', twoDaysAgo)">{{ twoDaysAgo | date:'MMMM d, y' }}</li>
               </ul>
             </div>
+
           </div>
           <div class="leave-grid">
             <div class="leave-meta">
-              <div class="bar-meta">Total absence <b>15</b></div>
+              <div class="bar-meta">Total absence <b>{{ leaveTotalAbsence }}</b></div>
             </div>
             <div class="leave-bars">
-
-
-              <div class="bar-row">
-                <div class="bar-track"><span class="bar-fill" style="width: 78%"></span></div>
-                <span class="bar-label">Paid Vacation</span>
-              </div>
-
-              <div class="bar-row">
-                <div class="bar-track"><span class="bar-fill" style="width: 52%"></span></div>
-                <span class="bar-label">Sick</span>
-              </div>
-
-              <div class="bar-row">
-                <div class="bar-track"><span class="bar-fill" style="width: 65%"></span></div>
-                <span class="bar-label">Unjustified</span>
-              </div>
-
-              <div class="bar-row">
-                <div class="bar-track"><span class="bar-fill" style="width: 40%"></span></div>
-                <span class="bar-label">Maternity</span>
-              </div>
-
-              <div class="bar-row">
-                <div class="bar-track"><span class="bar-fill" style="width: 30%"></span></div>
-                <span class="bar-label">Administrative</span>
+              <div class="bar-row" *ngFor="let t of leaveTypes">
+                <div class="bar-track">
+                  <span class="bar-fill" [style.width.%]="leaveTypePercent[t.key] || 0"></span>
+                </div>
+                <span class="bar-label">{{ t.label }}</span>
               </div>
             </div>
 
@@ -133,20 +109,17 @@
           <div class="card-head">
             <h3>To Do List</h3>
             <div class="date-menu-wrap" (click)="$event.stopPropagation()">
-              <button class="ghost-btn" (click)="toggleDateMenu()">
-                {{ lastUpdated | date:'MMMM d, y' }} ▾
+              <button class="ghost-btn" (click)="toggleDateMenu('todo'); $event.stopPropagation()">
+                {{ todoDate | date:'MMMM d, y' }} ▾
               </button>
 
-              <!-- menu des 2 jours précédents -->
-              <ul class="date-menu" *ngIf="dateMenuOpen">
-                <li (click)="setLastUpdated(yesterday)">
-                  {{ yesterday | date:'MMMM d, y' }}
-                </li>
-                <li (click)="setLastUpdated(twoDaysAgo)">
-                  {{ twoDaysAgo | date:'MMMM d, y' }}
-                </li>
+              <ul class="date-menu" *ngIf="openMenu === 'todo'">
+                <li (click)="setCardDate('todo', yesterday)">{{ yesterday | date:'MMMM d, y' }}</li>
+                <li (click)="setCardDate('todo', twoDaysAgo)">{{ twoDaysAgo | date:'MMMM d, y' }}</li>
               </ul>
             </div>
+
+
           </div>
 
           <ul class="todo-list">

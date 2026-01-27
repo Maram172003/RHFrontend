@@ -38,12 +38,12 @@
               <span class="kpi-title">Last Leave Demand</span>
             </div>
 
-            <!-- Statut statique pour l’instant -->
-            <div class="kpi-value">Not Approved</div>
+            
+            <div class="kpi-value">{{ lastLeaveStatus }}</div>
 
-            <!-- Date statique d’exemple -->
+            
             <div class="kpi__updatebar">
-              Update: {{ lastUpdated | date:'MMMM d, y' }}
+              Update: {{ lastLeaveUpdated ? (lastLeaveUpdated | date:'MMMM d, y') : '-' }}
             </div>
 
           </div>

@@ -43,12 +43,21 @@ export class AuthService {
       .filter(Boolean);
 
     if (roles.includes('admin')) return 'admin';
-    if (roles.includes('hr') || roles.includes('rh')) return 'hr'; 
+    if (roles.includes('hr') || roles.includes('rh')) return 'hr';
     if (roles.includes('supervisor')) return 'supervisor';
     return 'employee';
   }
 
   isEmployee(): boolean { return this.getMainRole() === 'employee'; }
- 
+
   isAdmin(): boolean { return this.getMainRole() === 'admin'; }
+
+  isHr(): boolean { return this.getMainRole() === 'hr'; }
+  isSupervisor(): boolean { return this.getMainRole() === 'supervisor'; }
+
+  //////////////////
+  getUserId(): string | null {
+    const p = this.decodeTokenPayload();
+    return p?.id ?? null;
+  }
 }

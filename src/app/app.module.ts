@@ -7,8 +7,7 @@ import { AppComponent } from './app.component';
 
 
 import { NavbarComponent } from './layout/navbar/navbar.component';
-import { SidebarComponent } from './layout/sidebar/sidebar.component';
-import { DashboardEmployeeComponent } from './private/componenets/dashboard-employee/dashboard-employee.component';
+
 import { SidebarAdministrationComponent } from './layout/sidebar-administration/sidebar-administration.component';
 import { DashboardAdminstrationComponent } from './private/componenets/dashboard-adminstration/dashboard-adminstration.component';
 import { EmployeeComponent } from './private/componenets/employee/employee.component';
@@ -21,6 +20,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { ResetAccessCodeComponent } from './auth/components/reset-access-code/reset-access-code.component';
 import { JwtInterceptor } from './auth/services/jwt.interceptor';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import {  NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SettingsComponent } from './private/componenets/settings/settings.component';
+
 
 
 
@@ -28,11 +34,10 @@ import { JwtInterceptor } from './auth/services/jwt.interceptor';
 @NgModule({
   declarations: [
     AppComponent,
-   
+
     DashboardAdminstrationComponent,
     NavbarComponent,
-    SidebarComponent,
-    DashboardEmployeeComponent,
+
     SidebarAdministrationComponent,
     EmployeeComponent,
     LeaveAdminstrationComponent,
@@ -41,15 +46,22 @@ import { JwtInterceptor } from './auth/services/jwt.interceptor';
     SidebarsuperComponent,
     LoginComponent,
     ResetAccessCodeComponent,
-    
+    SettingsComponent,
 
-    
+
+
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     ReactiveFormsModule,
     HttpClientModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    NoopAnimationsModule,
+    
 
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },],

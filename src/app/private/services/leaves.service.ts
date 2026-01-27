@@ -73,4 +73,10 @@ export class LeavesService {
       { status }
     );
   }
+
+  getBlockedDates(year: number) {
+    return this.http.get<{ year: number; holidays: string[]; busy: string[]; disabled: string[] }>(
+      `${this.base}/blocked?year=${year}`
+    );
+  }
 }

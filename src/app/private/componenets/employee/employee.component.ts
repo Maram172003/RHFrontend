@@ -13,6 +13,8 @@ import { switchMap } from 'rxjs';
   styleUrls: ['./employee.component.css'],
 })
 export class EmployeeComponent implements OnInit {
+
+  photoRemoved = false;
   activeTab: 'employees' | 'demands' | 'credit' | 'team' = 'employees';
 
   showOverlay = false;
@@ -38,6 +40,11 @@ export class EmployeeComponent implements OnInit {
   draftEmail: string | null = null;
   draftAccessCode: string | null = null;
   proForm!: FormGroup;
+
+  searchTerm = '';
+  selectedDepartment = 'all';
+  selectedDesignation = 'all';
+  filterDesignations: string[] = [];
 
   constructor(private fb: FormBuilder, private employeesService: EmployeesService, private lookups: LookupsService, private cdRef: ChangeDetectorRef,) { }
 
@@ -247,11 +254,14 @@ export class EmployeeComponent implements OnInit {
 
       emailCtrl.markAsTouched();
       emailCtrl.markAsDirty();
-      emailCtrl.updateValueAndValidity({ emitEvent: false });
+
+      
       this.submitted = true;
 
 
-      console.log('EXISTS DUPLICATE => setting emailTaken error');
+      this.apiError = 'This email is already used'; 
+      this.cdRef.detectChanges();          
+      console.log('FULL ERR = ', err);        
       return;
     }
 
@@ -280,7 +290,7 @@ export class EmployeeComponent implements OnInit {
     return 'Invalid value';
   }
 
-  // === erreurs "cross-field" (form-level) ===
+  // 
   hasTrialAfterStartError(): boolean {
     return !!this.proForm.errors?.['trialAfterStart'] && (this.submitted || this.proForm.touched);
   }
@@ -349,7 +359,7 @@ export class EmployeeComponent implements OnInit {
     fd.append('roles', JSON.stringify(roles));
 
     if (this.selectedFile) {
-      fd.append('photo', this.selectedFile); // ✅ le nom doit être "photo"
+      fd.append('photo', this.selectedFile);
     }
 
     this.employeesService.submitDraft(fd).subscribe({
@@ -525,6 +535,11 @@ export class EmployeeComponent implements OnInit {
     this.selectedFile = null;
     this.filePreviewUrl = null;
 
+    if (this.mode === 'edit' && this.viewPhotoUrl) {
+      this.viewPhotoUrl = null;
+      this.photoRemoved = true; // ✅ on demande suppression côté backend
+    }
+
     if (this.previewObjectUrl) {
       URL.revokeObjectURL(this.previewObjectUrl);
       this.previewObjectUrl = null;
@@ -544,6 +559,7 @@ export class EmployeeComponent implements OnInit {
 
 
   private setSelectedFile(file: File) {
+    this.photoRemoved = false;
     this.selectedFile = file;
     this.fileName = file.name;
 
@@ -617,7 +633,7 @@ export class EmployeeComponent implements OnInit {
   pageSize = 5;
   currentPage = 1;
   get totalRecords(): number {
-    return this.employees?.length ?? 0;
+    return this.filteredList.length;
   }
 
   get totalPages(): number {
@@ -626,9 +642,8 @@ export class EmployeeComponent implements OnInit {
 
   get pagedEmployees(): any[] {
     const start = (this.currentPage - 1) * this.pageSize;
-    return (this.employees ?? []).slice(start, start + this.pageSize);
+    return this.filteredList.slice(start, start + this.pageSize);
   }
-
   get startIndex(): number {
     return this.totalRecords === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
   }
@@ -826,7 +841,7 @@ export class EmployeeComponent implements OnInit {
 
 
         if (emp?.photoUrl) {
-          this.viewPhotoUrl = this.toPhotoSrc(emp.photoUrl); 
+          this.viewPhotoUrl = this.toPhotoSrc(emp.photoUrl);
         } else {
           this.viewPhotoUrl = null;
         }
@@ -925,7 +940,9 @@ export class EmployeeComponent implements OnInit {
     this.previewStep = 1;
 
 
-
+    this.fileName = '';
+    this.selectedFile = null;
+    this.filePreviewUrl = null;
 
     this.employeesService.getById(id).subscribe({
       next: (emp) => {
@@ -987,6 +1004,12 @@ export class EmployeeComponent implements OnInit {
           });
         }
 
+        if (emp?.photoUrl) {
+          this.viewPhotoUrl = this.toPhotoSrc(emp.photoUrl);
+        } else {
+          this.viewPhotoUrl = null;
+        }
+
         // managers list (si tu filtres)
         this.refreshManagersAll?.();
         this.refreshFilteredManagers?.();
@@ -1043,7 +1066,12 @@ export class EmployeeComponent implements OnInit {
           this.selectedRole === 'hr' ? Role.Hr :
             Role.Employee
     ];
-    this.employeesService.saveDetails(id, detailsPayload).pipe(
+    const details$ =
+      (this.selectedFile || this.photoRemoved)
+        ? this.employeesService.updateDetailsPhoto(id, detailsPayload, this.selectedFile, this.photoRemoved)
+        : this.employeesService.saveDetails(id, detailsPayload);
+
+    details$.pipe(
       switchMap(() => this.employeesService.updateRoles(id, roles))
     ).subscribe({
       next: () => {
@@ -1119,4 +1147,51 @@ export class EmployeeComponent implements OnInit {
 
     return photoUrl;
   }
+
+  onSearch(v: string) {
+    this.searchTerm = (v || '').trim();
+    this.goToPage(1);
+  }
+
+  onDepartmentChange(dep: string) {
+    this.selectedDepartment = dep || 'all';
+    this.selectedDesignation = 'all';
+    this.goToPage(1);
+
+
+    if (this.selectedDepartment !== 'all') {
+      this.lookups.getDesignations(this.selectedDepartment).subscribe(v => {
+        this.filterDesignations = v ?? [];
+      });
+    } else {
+      this.filterDesignations = [];
+    }
+  }
+
+  onDesignationChange(des: string) {
+    this.selectedDesignation = des || 'all';
+    this.goToPage(1);
+  }
+  get filteredList(): any[] {
+    const q = (this.searchTerm || '').toLowerCase().trim();
+
+    return (this.employees || []).filter(e => {
+      const dep = String(e.departmentName || e.department || '').toLowerCase();
+      const des = String(e.designationName || e.designation || '').toLowerCase();
+
+      const fullName = `${e.firstName || ''} ${e.lastName || ''}`.trim().toLowerCase();
+      const id = String(e.id || e.employeeId || '').toLowerCase();
+
+      const matchSearch = !q || fullName.includes(q) || id.includes(q);
+      const matchDep = this.selectedDepartment === 'all' || dep === this.selectedDepartment.toLowerCase();
+      const matchDes = this.selectedDesignation === 'all' || des === this.selectedDesignation.toLowerCase();
+
+      return matchSearch && matchDep && matchDes;
+    });
+  }
+  onFiltersChanged() {
+    this.currentPage = 1;
+  }
+
+
 }

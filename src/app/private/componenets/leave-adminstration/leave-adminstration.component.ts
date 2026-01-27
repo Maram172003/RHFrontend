@@ -10,9 +10,9 @@ type Tab = 'demands' | 'credit' | 'team-demand';
   styleUrl: './leave-adminstration.component.css'
 })
 export class LeaveAdminstrationComponent {
-   apiBase = 'http://localhost:4000';
+  apiBase = 'http://localhost:4000';
   editId: string | null = null;
-
+  picking: 'start' | 'end' = 'start';
   activeTab: Tab = 'demands';
   activeFilter: 'onhold' | 'valid' | 'canceled' | 'all' | 'category' = 'all';
 
@@ -26,13 +26,14 @@ export class LeaveAdminstrationComponent {
   file: File | null = null;
   fileName: string | null = null;
 
-  LeavePart = LeavePart; // pour HTML
+  LeavePart = LeavePart;
 
   myLeaves: LeaveRow[] = [];
+  selectedCategory: string = '';
 
   leaveForm!: FormGroup;
 
-  availableLeaves = 24;
+  availableLeaves = 12;
   lastUpdated: Date = new Date();
 
   constructor(
@@ -42,7 +43,42 @@ export class LeaveAdminstrationComponent {
   ) { }
   setFilter(f: any) {
     this.activeFilter = f;
+
+    if (f !== 'category') {
+      this.selectedCategory = '';
+    }
+
+    this.currentPage = 1;
   }
+
+  onCategoryChange(value: string) {
+    this.selectedCategory = value;
+    this.activeFilter = 'category';
+    this.currentPage = 1;
+  }
+
+  private getFilteredMyLeaves(): LeaveRow[] {
+    const norm = (s: any) => String(s || '').toLowerCase();
+    let list = [...(this.myLeaves || [])];
+
+
+    if (this.activeFilter === 'onhold') {
+      list = list.filter(l => norm(l.status) === 'pending');
+    } else if (this.activeFilter === 'valid') {
+      list = list.filter(l => norm(l.status) === 'approved');
+    } else if (this.activeFilter === 'canceled') {
+      list = list.filter(l => ['refused', 'canceled'].includes(norm(l.status)));
+    }
+
+
+    if (this.selectedCategory) {
+      list = list.filter(l => norm(l.leaveType) === norm(this.selectedCategory));
+    }
+
+    return list;
+  }
+
+
   ngOnInit(): void {
     this.leaveForm = this.fb.group(
       {
@@ -58,8 +94,16 @@ export class LeaveAdminstrationComponent {
     this.leaveForm.get('leaveType')?.valueChanges.subscribe(() => {
       this.applyLeaveTypeRules();
     });
-
     this.loadMyLeaves();
+    this.loadBlockedDatesForYear(new Date().getFullYear());
+
+    if (this.authService.isAdmin()) {
+      this.activeTab = 'team-demand';
+      this.loadTeamLeaves();
+    } else {
+      this.activeTab = 'demands';
+      this.loadMyLeaves();
+    }
   }
 
   private applyLeaveTypeRules() {
@@ -76,29 +120,37 @@ export class LeaveAdminstrationComponent {
     other?.updateValueAndValidity({ emitEvent: false });
 
 
-    if (type === 'sickness' && !this.file) {
-      this.leaveForm.setErrors({ ...(this.leaveForm.errors || {}), attachmentRequired: true });
-    } else {
-      const errs = { ...(this.leaveForm.errors || {}) };
-      delete errs['attachmentRequired'];
-      this.leaveForm.setErrors(Object.keys(errs).length ? errs : null);
-    }
-  }
-  selectTab(tab: Tab) {
-    this.activeTab = tab;
+    const mustHaveAttachment =
+      type === 'sickness' && !this.file && !this.existingAttachmentUrl;
 
-    if (tab === 'team-demand') {
-      this.loadTeamLeaves();
-    }
+    const current = { ...(this.leaveForm.errors || {}) };
+
+    if (mustHaveAttachment) current['attachmentRequired'] = true;
+    else delete current['attachmentRequired'];
+
+    this.leaveForm.setErrors(Object.keys(current).length ? current : null);
   }
+
 
   openOverlay() {
+    if (this.authService.isAdmin()) return;
     this.mode = 'create';
     this.currentLeaveId = null;
 
     this.showOverlay = true;
     this.apiError = null;
     this.submitted = false;
+
+    const year = new Date().getFullYear();
+    this.loadBlockedDatesForYear(year);
+    const next = this.getNextSelectableDate(this.todayDate);
+    const ymd = this.formatYMD(next);
+
+    this.leaveForm.patchValue({
+      startDate: ymd,
+      endDate: ymd,
+    });
+
     this.file = null;
     this.fileName = '';
 
@@ -112,6 +164,7 @@ export class LeaveAdminstrationComponent {
       startPart: LeavePart.Full,
       endPart: LeavePart.Full,
     });
+    this.loadBlockedDatesForYear(new Date().getFullYear());
   }
 
   closeOverlay() {
@@ -158,6 +211,7 @@ export class LeaveAdminstrationComponent {
     this.fileName = '';
     this.existingAttachmentUrl = null;
     this.existingAttachmentName = null;
+    this.applyLeaveTypeRules();
   }
 
   onDragOver(ev: DragEvent) { ev.preventDefault(); }
@@ -169,6 +223,7 @@ export class LeaveAdminstrationComponent {
     if (!f) return;
     this.file = f;
     this.fileName = f.name;
+    this.applyLeaveTypeRules();
   }
   existingAttachmentUrl: string | null = null;
   existingAttachmentName: string | null = null;
@@ -178,10 +233,14 @@ export class LeaveAdminstrationComponent {
     this.submitted = true;
     this.apiError = null;
 
+
+    this.leaveForm.updateValueAndValidity({ emitEvent: false });
     this.leaveForm.markAllAsTouched();
-    if (this.leaveForm.invalid) return;
+
     this.applyLeaveTypeRules();
+    if (this.leaveForm.invalid) return;
     if (this.leaveForm.errors?.['attachmentRequired']) return;
+
     const v = this.leaveForm.getRawValue();
     const fd = new FormData();
     fd.append('leaveType', v.leaveType);
@@ -192,7 +251,17 @@ export class LeaveAdminstrationComponent {
     if (v.leaveType === 'other') {
       fd.append('otherReason', v.otherReason);
     }
+    const s = this.leaveForm.value.startDate;
+    const e = this.leaveForm.value.endDate;
 
+    if (s && this.disabledDates.has(s)) {
+      this.apiError = 'Start date is not available (holiday or already has leave).';
+      return;
+    }
+    if (e && this.disabledDates.has(e)) {
+      this.apiError = 'End date is not available (holiday or already has leave).';
+      return;
+    }
 
     if (this.file) fd.append('attachment', this.file);
 
@@ -215,7 +284,12 @@ export class LeaveAdminstrationComponent {
 
   loadMyLeaves() {
     this.leavesService.getMyLeaves().subscribe({
-      next: (rows) => (this.myLeaves = rows || []),
+      next: (rows) => {
+        this.myLeaves = rows || [];
+        this.recomputeLeaveBalance();
+        this.lastUpdated = new Date();
+        this.loadBlockedDatesForYear(new Date().getFullYear());
+      },
       error: (err) => this.handleApiError(err),
     });
   }
@@ -237,7 +311,7 @@ export class LeaveAdminstrationComponent {
   pageSize = 5;
   currentPage = 1;
   get totalRecords(): number {
-    return this.myLeaves?.length ?? 0;
+    return this.getFilteredMyLeaves().length;
   }
 
 
@@ -247,8 +321,9 @@ export class LeaveAdminstrationComponent {
   }
 
   get pagedLeaves(): any[] {
+    const filtered = this.getFilteredMyLeaves();
     const start = (this.currentPage - 1) * this.pageSize;
-    return (this.myLeaves ?? []).slice(start, start + this.pageSize);
+    return filtered.slice(start, start + this.pageSize);
   }
 
   get startIndex(): number {
@@ -298,14 +373,13 @@ export class LeaveAdminstrationComponent {
     this.mode = 'edit';
     this.currentLeaveId = r.id;
 
+
     this.existingAttachmentUrl = this.buildFileUrl(r.attachmentUrl);
-    this.fileName = this.existingAttachmentUrl ? (this.existingAttachmentUrl.split('/').pop() || '') : '';
 
-    this.existingAttachmentUrl = r.attachmentUrl ?? null;
-    this.existingAttachmentName = this.existingAttachmentUrl
-      ? this.existingAttachmentUrl.split('/').pop() ?? 'attachment'
+
+    this.existingAttachmentName = r.attachmentUrl
+      ? r.attachmentUrl.split('/').pop() ?? 'attachment'
       : null;
-
 
     this.fileName = this.existingAttachmentName;
 
@@ -318,6 +392,7 @@ export class LeaveAdminstrationComponent {
       startPart: r.startPart,
       endPart: r.endPart,
     });
+    this.applyLeaveTypeRules();
   }
   private buildFileUrl(path?: string | null) {
     if (!path) return null;
@@ -333,87 +408,294 @@ export class LeaveAdminstrationComponent {
   }
   teamLeaves: LeaveRow[] = [];
 
+
+  LeaveStatus = LeaveStatus;
+
+
+
+  teamPage = 1;
+  teamPageSize = 5;
+
+  get teamTotalRecords() {
+    return this.teamLeaves.length;
+  }
+  get teamTotalPages() {
+    return Math.max(1, Math.ceil(this.teamTotalRecords / this.teamPageSize));
+  }
+  get teamPages(): number[] {
+    return Array.from({ length: this.teamTotalPages }, (_, i) => i + 1);
+  }
+  get teamStartIndex() {
+    return this.teamTotalRecords === 0 ? 0 : (this.teamPage - 1) * this.teamPageSize + 1;
+  }
+  get teamEndIndex() {
+    return Math.min(this.teamPage * this.teamPageSize, this.teamTotalRecords);
+  }
+  get teamPagedLeaves() {
+    const start = (this.teamPage - 1) * this.teamPageSize;
+    return this.teamLeaves.slice(start, start + this.teamPageSize);
+  }
+
   loadTeamLeaves() {
     this.leavesService.getTeamLeaves().subscribe({
-      next: (rows) => (this.teamLeaves = rows || []),
+      next: (rows) => {
+        this.teamLeaves = rows || [];
+        this.teamPage = 1;
+      },
       error: (err) => this.handleApiError(err),
     });
   }
-  LeaveStatus = LeaveStatus;
+
+
+  selectTab(tab: Tab) {
+    this.activeTab = tab;
+
+    if (tab === 'demands') this.loadMyLeaves();
+    if (tab === 'team-demand') this.loadTeamLeaves();
+  }
+
+
+  teamPrevPage() { if (this.teamPage > 1) this.teamPage--; }
+  teamNextPage() { if (this.teamPage < this.teamTotalPages) this.teamPage++; }
+  teamGoToPage(p: number) { this.teamPage = p; }
+
   updatingStatus = false;
+
   updateSelectedStatus(status: LeaveStatus) {
-    if (!this.selectedLeave) return;
+    if (!this.selectedLeave?.id) return;
 
     this.updatingStatus = true;
-
     this.leavesService.updateLeaveStatus(this.selectedLeave.id, status).subscribe({
-      next: (res) => {
+      next: (res: any) => {
+
         const updated = res.leave;
 
-        this.selectedLeave = { ...this.selectedLeave!, status: updated.status };
 
-        this.teamLeaves = (this.teamLeaves ?? []).map(l =>
-          l.id === updated.id ? { ...l, status: updated.status } : l
-        );
+        this.selectedLeave = {
+          ...this.selectedLeave,
+          ...updated,
+          employeeName: updated.employeeName ?? this.selectedLeave?.employeeName
+        };
 
-        this.myLeaves = (this.myLeaves ?? []).map(l =>
-          l.id === updated.id ? { ...l, status: updated.status } : l
-        );
 
-        this.loadTeamLeaves();
+        const idx = this.teamLeaves.findIndex(x => x.id === updated.id);
+        if (idx !== -1) {
+          this.teamLeaves[idx] = {
+            ...this.teamLeaves[idx],
+            ...updated,
+            employeeName: updated.employeeName ?? this.teamLeaves[idx].employeeName
+          };
+        }
+
         this.loadMyLeaves();
 
         this.updatingStatus = false;
-        this.closeDetails();
       },
       error: (err) => {
         this.updatingStatus = false;
         this.handleApiError(err);
-      },
+      }
     });
   }
+  holidayDates = new Set<string>();
+  busyDates = new Set<string>();
+  disabledDates = new Set<string>();
 
-  pageSizeTeam = 10;
-currentPageTeam = 1;
+  private toKey(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
 
-get totalTeamRecords(): number {
-  return this.teamLeaves?.length ?? 0;
-}
+  dateFilter = (d: Date | null): boolean => {
+    if (!d) return false;
+    return !this.disabledDates.has(this.toKey(d));
+  };
 
-get totalTeamPages(): number {
-  return Math.max(1, Math.ceil(this.totalTeamRecords / this.pageSizeTeam));
-}
+  dateClass = (d: Date): string => {
+    const k = this.toKey(d);
+    if (this.holidayDates.has(k)) return 'day-holiday';
+    if (this.busyDates.has(k)) return 'day-busy';
+    return '';
+  };
 
-get teamStartIndex(): number {
-  if (this.totalTeamRecords === 0) return 0;
-  return (this.currentPageTeam - 1) * this.pageSizeTeam + 1;
-}
+  loadBlockedDatesForYear(year: number) {
+    this.leavesService.getBlockedDates(year).subscribe({
+      next: (res: any) => {
+        this.holidayDates = new Set(res.holidays || []);
+        this.busyDates = new Set(res.busy || []);
+        this.disabledDates = new Set(res.disabled || []);
+        const next = this.getNextSelectableDate(this.todayDate);
+        const ymd = this.formatYMD(next);
+        this.leaveForm.patchValue({ startDate: ymd, endDate: ymd });
+      },
+      error: (err) => this.handleApiError(err),
+    });
+  }
+  get calendarSelected(): Date | null {
+    const v = this.leaveForm.get(this.picking === 'start' ? 'startDate' : 'endDate')?.value;
+    return v ? new Date(v) : null;
+  }
 
-get teamEndIndex(): number {
-  if (this.totalTeamRecords === 0) return 0;
-  return Math.min(this.currentPageTeam * this.pageSizeTeam, this.totalTeamRecords);
-}
+  get displayStartDate(): string {
+    const v = this.leaveForm.get('startDate')?.value;
+    return v ? this.toKey(new Date(v)) : '';
+  }
 
-get teamPages(): number[] {
-  return Array.from({ length: this.totalTeamPages }, (_, i) => i + 1);
-}
+  get displayEndDate(): string {
+    const v = this.leaveForm.get('endDate')?.value;
+    return v ? this.toKey(new Date(v)) : '';
+  }
+  onCalendarPick(d: Date | null) {
+    if (!d) return;
 
-get pagedTeamLeaves(): LeaveRow[] {
-  const start = (this.currentPageTeam - 1) * this.pageSizeTeam;
-  return (this.teamLeaves ?? []).slice(start, start + this.pageSizeTeam);
-}
+    // si tu utilises dateFilter
+    if (!this.dateFilter(d)) return;
 
-teamGoToPage(p: number) {
-  if (p < 1 || p > this.totalTeamPages) return;
-  this.currentPageTeam = p;
-}
+    const key = this.toKey(d);
 
-teamPrevPage() {
-  if (this.currentPageTeam > 1) this.currentPageTeam--;
-}
+    if (this.picking === 'start') {
+      this.leaveForm.patchValue({ startDate: key });
 
-teamNextPage() {
-  if (this.currentPageTeam < this.totalTeamPages) this.currentPageTeam++;
-}
+      const end = this.leaveForm.get('endDate')?.value;
+      if (!end || end < key) this.leaveForm.patchValue({ endDate: key });
+    } else {
+      this.leaveForm.patchValue({ endDate: key });
+    }
+  }
+  todayDate: Date = new Date();
+
+  sideCalendarOpen = false;
+  sideTarget: 'start' | 'end' = 'start';
+
+  openSideCalendar(target: 'start' | 'end') {
+    this.sideTarget = target;
+    this.sideCalendarOpen = true;
+  }
+
+  closeSideCalendar() {
+    this.sideCalendarOpen = false;
+  }
+
+  onSideDateSelected(d: Date | null) {
+    if (!d) return;
+
+    const ymd = this.formatYMD(d); // ✅ "2026-01-20"
+
+    if (this.sideTarget === 'start') {
+      this.leaveForm.patchValue({ startDate: ymd });
+    } else {
+      this.leaveForm.patchValue({ endDate: ymd });
+    }
+  }
+
+  private formatYMD(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  parseYMD(s: string | null | undefined): Date | null {
+    if (!s) return null;
+    const [y, m, d] = s.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  private isSelectableDate(d: Date): boolean {
+    return this.dateFilter(d); // utilise ton dateFilter existant
+  }
+
+  private getNextSelectableDate(from: Date): Date {
+    const d = new Date(from);
+    d.setHours(0, 0, 0, 0);
+
+    // max 366 itérations pour éviter boucle infinie
+    for (let i = 0; i < 366; i++) {
+      if (this.isSelectableDate(d)) return d;
+      d.setDate(d.getDate() + 1);
+    }
+    return new Date(from); // fallback
+  }
+
+
+  private readonly PAID_TYPES = new Set(['paid']);
+  private readonly ACCRUAL_PER_MONTH = 1;
+  private readonly YEAR_CAP_DAYS = 12;
+
+  private getCurrentYear(): number {
+    return new Date().getFullYear();
+  }
+
+  private monthsWorkedInYear(hireDate: Date, year: number): number {
+    const startOfYear = new Date(year, 0, 1);
+    const endOfYear = new Date(year, 11, 31);
+
+    const start = hireDate > startOfYear ? hireDate : startOfYear;
+    const end = new Date() < endOfYear ? new Date() : endOfYear;
+
+    if (end < start) return 0;
+
+
+    return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+  }
+
+  private accruedDaysForYear(hireDate: Date, year: number): number {
+    const startOfYear = new Date(year, 0, 1);
+
+
+    if (hireDate <= startOfYear) return this.YEAR_CAP_DAYS;
+
+
+    const months = this.monthsWorkedInYear(hireDate, year);
+    const acquired = months * this.ACCRUAL_PER_MONTH;
+    return Math.min(acquired, this.YEAR_CAP_DAYS);
+  }
+
+  private parseDateSafe(d: any): Date | null {
+    if (!d) return null;
+
+    if (typeof d === 'string') {
+      const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    }
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+
+
+
+  private getHireDate(): Date {
+    const fromAuth =
+      (this.authService as any)?.currentUser?.contractStart ||
+      (this.authService as any)?.me?.contractStart ||
+      (this.authService as any)?.currentUser?.createdAt;
+
+    const d = this.parseYMD(fromAuth);
+    return d ?? new Date(new Date().getFullYear(), 0, 1);
+  }
+
+  private recomputeLeaveBalance(): void {
+    const year = new Date().getFullYear();
+    const hireDate = this.getHireDate();
+
+    const acquired = this.accruedDaysForYear(hireDate, year);
+    const taken = this.takenApprovedPaidDaysForYear(year);
+
+    this.availableLeaves = Math.max(0, acquired - taken);
+  }
+  private takenApprovedPaidDaysForYear(year: number): number {
+    return (this.myLeaves || [])
+      .filter(l => (l.status || '').toLowerCase() === 'approved')
+      .filter(l => (l.leaveType || '').toLowerCase() === 'paid')
+      .filter(l => {
+        const sd = this.parseYMD(l.startDate);
+        return sd && sd.getFullYear() === year;
+      })
+      .reduce((sum, l) => sum + (Number(l.duration) || 0), 0);
+  }
 }
 

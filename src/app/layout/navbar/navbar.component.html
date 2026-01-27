@@ -1,20 +1,71 @@
-    <header class="header">
-      <div class="greeting">
-        <h1>Hello dana 👋🏻</h1>
-        <p>{{ greeting$ | async }}</p>
+<header class="header">
+  <div class="greeting">
+    <h1>Hello {{ userFirstName }} 👋🏻</h1>
+    <p>{{ greeting$ | async }}</p>
+  </div>
+
+  <div class="header-right">
+    <span class="datetime">
+      {{ now$ | async | date:"EEE, dd MMM y | HH:mm 'hrs'" }}
+    </span>
+    <div class="header-icons">
+      <div class="notif-wrap">
+
+        <button type="button" class="icon-btn" (click)="toggleNotif(); $event.stopPropagation()">
+          <img src="assets/images/notification-bell.svg" alt="Notifications" />
+          <ng-container *ngIf="(unreadCount$ | async) as c">
+            <span class="badge" *ngIf="c > 0">{{ c }}</span>
+          </ng-container>
+        </button>
+
+
+        <div class="notif-panel" *ngIf="isNotifOpen" (click)="$event.stopPropagation()">
+          <div class="notif-head">
+            <span>Notifications</span>
+            <button type="button" class="send-btn" (click)="openComposer(); $event.stopPropagation()">
+              Send
+            </button>
+          </div>
+
+          <!-- composer -->
+          <div class="composer" *ngIf="showComposer" [formGroup]="composerForm">
+            <select formControlName="recipientId">
+              <option value="" disabled selected hidden>Select recipient</option>
+              <option *ngFor="let u of recipients" [value]="u.id">
+                {{ u.firstName }} {{ u.lastName }}
+              </option>
+            </select>
+
+            <input type="text" placeholder="Title" formControlName="title" />
+            <textarea rows="3" placeholder="Message" formControlName="message"></textarea>
+
+            <div class="composer-actions">
+              <button type="button" (click)="closeComposer(); $event.stopPropagation()">Cancel</button>
+              <button type="button" (click)="sendNotification(); $event.stopPropagation()">Send</button>
+            </div>
+          </div>
+
+          <!-- list -->
+          <div class="notif-list">
+            <ng-container *ngIf="(notifications$ | async) as list">
+              <div class="notif-item" *ngFor="let n of list" (click)="clickNotifItem(n); $event.stopPropagation()"
+                [class.unread]="!n.readAt">
+                <div class="nt-title">{{ n.title }}</div>
+                <div class="nt-msg">{{ n.message }}</div>
+                <div class="nt-meta">{{ n.createdAt | date:'short' }}</div>
+              </div>
+
+              <div class="empty" *ngIf="list.length === 0">No notifications</div>
+            </ng-container>
+          </div>
+        </div>
       </div>
 
-      <div class="header-right">
-        <span class="datetime">
-          {{ now$ | async | date:"EEE, dd MMM y | HH:mm 'hrs'" }}
-        </span>
-        <div class="header-icons">
-          <img src="assets/images/img_ic_round_notifications.svg" alt="Notifications">
-          <img src="assets/images/img_vector.svg" alt="Messages">
-        </div>
-        <div class="employee-dropdown">
-          <span>Employee</span>
-          <img src="assets/images/img_arrow_down.svg" alt="Dropdown">
-        </div>
-      </div>
-    </header>
+      
+    </div>
+    <div class="employee-dropdown">
+      <span>{{ userRoleLabel }}</span>
+      <img src="assets/images/img_arrow_down.svg" alt="Dropdown">
+    </div>
+  </div>
+</header>

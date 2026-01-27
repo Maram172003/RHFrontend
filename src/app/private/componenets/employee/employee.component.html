@@ -18,31 +18,52 @@
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.35-4.35"></path>
                             </svg>
-                            <input type="text" placeholder="Search">
+                            <input type="text" placeholder="Search" [value]="searchTerm"
+                                (input)="searchTerm = $any($event.target).value; onFiltersChanged()" />
                         </div>
                     </div>
 
                     <div class="filter-group">
                         <label>Departement</label>
-                        <select>
-                            <option>All</option>
-                            <option>Design</option>
-                            <option>Development</option>
-                            <option>Sales</option>
-                            <option>PM</option>
-                            <option>HR</option>
-                            <option>BA</option>
+                        <select [value]="selectedDepartment"
+                            (change)="selectedDepartment = $any($event.target).value; onFiltersChanged()">
+                            <option value="all">All</option>
+                            <option value="IT">IT</option>
+                            <option value="AI">AI</option>
+                            <option value="Commercial">Commercial</option>
+                            <option value="Finance">Finance</option>
+                            <option value="HR">HR</option>
+                            <option value="Operations">Operations</option>
+
                         </select>
                     </div>
 
                     <div class="filter-group">
                         <label>Designation</label>
-                        <select>
-                            <option>All</option>
-                            <option>UI/UX Designer</option>
-                            <option>PHP Developer</option>
-                            <option>Sales Manager</option>
-                            <option>Project Manager</option>
+                        <select [value]="selectedDesignation"
+                            (change)="selectedDesignation = $any($event.target).value; onFiltersChanged()">
+                            <option value="all">All</option>
+                            <option value="Ml Engineer">Ml Engineer </option>
+                            <option value="Data Scientist">Data Scientist</option>
+                            <option value="Mlops">Mlops</option>
+                            <option value="Research Engineer">Research Engineer</option>
+                            <option value="Frontend Developer">Frontend Developer</option>
+                            <option value="Backend Developer">Backend Developer</option>
+                            <option value="Fullstack Developer">Fullstack Developer</option>
+                            <option value="QA Engineer">QA Engineer</option>
+                            <option value="Sales Rep">Sales Rep</option>
+                            <option value="Sales Lead">Sales Lead</option>
+                            <option value="Account Manager">Account Manager</option>
+                            <option value="Accountant">Accountant</option>
+                            <option value="Financial Analyst">Financial Analyst</option>
+                            <option value="Controller">Controller</option>
+                            <option value="HR Assistant"> HR Assistant</option>
+                            <option value="HR Manager">HR Manager</option>
+                            <option value="HR Recuiter">HR Recuiter</option>
+                            <option value="Office Manager"> Office Manager</option>
+                            <option value="Logistics">Logistics</option>
+                            <option value="Operation coordinator">Operation coordinator</option>
+
                         </select>
                     </div>
 
@@ -397,7 +418,8 @@
                                             <div class="preview-area">
                                                 <!--  Preview si image -->
                                                 <img *ngIf="filePreviewUrl || viewPhotoUrl" class="upload-preview"
-                                                    [src]="filePreviewUrl || viewPhotoUrl" alt="Employee photo" />
+                                                    [src]="filePreviewUrl || toPhotoSrc(viewPhotoUrl)"
+                                                    alt="Employee photo" />
 
                                                 <!-- sinon icône fichier -->
                                                 <svg *ngIf="mode !== 'view' && !filePreviewUrl" class="file-badge"
@@ -831,7 +853,7 @@
                             </select>
 
                         </div>
-                        <small class="error" *ngIf="isInvalid('lineManagerId')">
+                        <small class="error" *ngIf="shouldShowLineManager() && isInvalid('lineManagerId')">
                             {{ getErrorMessage('lineManagerId') }}
                         </small>
 

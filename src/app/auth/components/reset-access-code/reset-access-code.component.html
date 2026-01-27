@@ -1,37 +1,44 @@
-<div class="card">
-  <h2>Définir un nouveau code d’accès</h2>
-
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label>Code actuel</label>
-      <input type="password" formControlName="currentAccessCode" maxlength="6" />
-      <small *ngIf="form.get('currentAccessCode')?.invalid && form.get('currentAccessCode')?.touched">
-        6 caractères requis.
-      </small>
+<div class="auth">
+  <div class="card">
+    <div class="brand">
+      <h1 id="title">Set a new access code</h1>
+      
     </div>
+    
 
-    <div class="field">
-      <label>Nouveau code</label>
-      <input type="password" formControlName="newAccessCode" maxlength="6" />
-      <small *ngIf="form.get('newAccessCode')?.invalid && form.get('newAccessCode')?.touched">
-        6 caractères requis.
-      </small>
-    </div>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        
+        <input type="password" formControlName="currentAccessCode" maxlength="6" placeholder="Current Access Code" />
+        <small *ngIf="form.get('currentAccessCode')?.invalid && form.get('currentAccessCode')?.touched">
+         6 characters required.
+        </small>
+      </div>
 
-    <div class="field">
-      <label>Confirmer le nouveau code</label>
-      <input type="password" formControlName="confirmNewAccessCode" maxlength="6" />
-      <small *ngIf="form.get('confirmNewAccessCode')?.invalid && form.get('confirmNewAccessCode')?.touched">
-        6 caractères requis.
-      </small>
-    </div>
+      <div class="field">
+        
+        <input type="password" formControlName="newAccessCode" maxlength="6" placeholder="New Access Code" />
+        <small *ngIf="form.get('newAccessCode')?.invalid && form.get('newAccessCode')?.touched">
+          6 characters required.
+        </small>
+      </div>
+
+      <div class="field">
+        
+        <input type="password" formControlName="confirmNewAccessCode" maxlength="6" placeholder="Confirm New Access Code" />
+        <small *ngIf="form.get('confirmNewAccessCode')?.invalid && form.get('confirmNewAccessCode')?.touched">
+          6 characters required.
+        </small>
+      </div>
 
 
 
-    <button type="submit" [disabled]="loading || form.invalid">
-      confirmer
-    </button>
-    <p class="error" *ngIf="error">{{ error }}</p>
-    <p class="success" *ngIf="success">{{ success }}</p>
-  </form>
+      <button type="submit" [disabled]="loading || form.invalid">
+        Confirm
+      </button>
+      <p class="error" *ngIf="error">{{ error }}</p>
+      <p class="success" *ngIf="success">{{ success }}</p>
+    </form>
+  </div>
+
 </div>

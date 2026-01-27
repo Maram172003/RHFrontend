@@ -542,3 +542,244 @@ tbody td{
  color: var(--teal, #1fc5b2);
 
 }
+
+.field.date-row{
+  display:flex;
+  flex-direction:row;      /* override your column */
+  align-items:center;
+  gap:10px;
+  
+  padding:10px 44px 10px 14px; 
+}
+
+/* input takes remaining space */
+.field.date-row .date-input{
+  flex:1;
+  width:100%;
+}
+
+/* override your global absolute star ONLY in date row */
+.field.date-row .req-star-after{
+  position: absolute !important;
+  
+  top: 50% !important;
+  transform: translateY(-50%);
+  margin: 0 !important;
+}
+
+.field.date-row .date-ico{
+  position: absolute;
+  right: 13px;           /* place icon avant l'étoile */
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.overlay-grid{
+  display:grid;
+  grid-template-columns: 1fr 360px; /* right panel width */
+  gap:16px;
+  align-items:start;
+}
+
+.form-col{ min-width:0; }
+
+/* right calendar panel */
+.calendar-col{
+  border:1px solid #e6ecef;
+  border-radius:14px;
+  padding:12px;
+  min-height: 360px;
+  background:#fff;
+  opacity:.25;
+  pointer-events:none;
+}
+
+.calendar-col.is-open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.cal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.cal-title{
+  font:600 14px/1 Lexend, sans-serif;
+  color:#16141b;
+}
+
+.cal-close{
+  border:1px solid #e6ecef;
+  background:#fff;
+  border-radius:10px;
+  width:32px;
+  height:32px;
+  cursor:pointer;
+}
+
+/* icon button inside date row */
+.date-ico-btn{
+  position:absolute;
+  right:34px;
+  top:50%;
+  transform:translateY(-50%);
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  padding:0;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.date-ico-btn img{
+  width:20px;
+  height:20px;
+}
+
+/* star after icon */
+.req-star-after{
+  position:absolute !important;
+  right:12px !important;
+  top:50% !important;
+  transform:translateY(-50%);
+  margin:0 !important;
+}
+
+
+.field.date-row{
+  padding-right: 80px;
+}
+
+.overlay-card{
+  position: relative;
+  overflow: visible; 
+}
+
+/* floating calendar panel on the right */
+.calendar-float{
+  position: absolute;
+  top: 72px;            
+  right: -390px;        
+  width: 360px;
+  background:#fff;
+  border:1px solid #e6ecef;
+  border-radius:14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  padding:12px;
+  z-index: 2000;
+}
+
+/* header inside panel */
+.cal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+.cal-title{
+  font:600 14px/1 Lexend, sans-serif;
+}
+.cal-close{
+  border:1px solid #e6ecef;
+  background:#fff;
+  border-radius:10px;
+  width:32px;
+  height:32px;
+  cursor:pointer;
+}
+
+/* keep room for icon+star */
+.field.date-row{ padding-right: 80px; }
+
+.date-ico-btn{
+  position:absolute;
+  right:34px;
+  top:50%;
+  transform:translateY(-50%);
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  padding:0;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.req-star-after{
+  position:absolute !important;
+  right:12px !important;
+  top:50% !important;
+  transform:translateY(-50%);
+}
+
+
+
+
+
+.cal-legend{
+  display:flex;
+  gap:18px;
+  align-items:center;
+  padding-top: 12px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(22,20,27,.08);
+  font: 500 12px/1 Lexend, sans-serif;
+  color: #7b7f86;
+}
+
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.legend-dot{
+  width: 22px;
+  height: 14px;
+  border-radius: 4px;
+  display:inline-block;
+}
+
+.legend-dot.holiday{
+  background: rgba(244, 91, 105, 0.18);
+  border: 1px solid rgba(244, 91, 105, 0.35);
+}
+
+.legend-dot.busy{
+  background: rgba(240, 214, 75, 0.30);
+  border: 1px solid rgba(240, 214, 75, 0.45);
+}
+.calendar-float ::ng-deep
+.mat-calendar-body-cell.day-holiday.mat-calendar-body-disabled
+.mat-calendar-body-cell-content{
+  background: rgba(244, 91, 105, 0.22) !important;
+  border: 1px solid rgba(244, 91, 105, 0.55) !important;
+  color: #b03a45 !important;
+  border-radius: 6px;
+  opacity: 1 !important; 
+}
+
+
+.calendar-float ::ng-deep
+.mat-calendar-body-cell.day-busy.mat-calendar-body-disabled
+.mat-calendar-body-cell-content{
+  background: rgba(240, 214, 75, 0.32) !important;
+  border: 1px solid rgba(240, 214, 75, 0.60) !important;
+  color: #7a6a00 !important;
+  border-radius: 6px;
+  opacity: 1 !important;
+}
+
+
+.calendar-float ::ng-deep .mat-calendar-body-disabled .mat-calendar-body-cell-content{
+  opacity: .45;
+  
+}
